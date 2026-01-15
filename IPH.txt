@@ -1,0 +1,281 @@
+﻿Headers:	
+Request:	0127F1F1F0F0703025C128E08200F1F5F3F7F4F2F4F5F0F0F1F7F4F1F0F0F7F0F0F4F0F0F0F0F0F0F0F0F0F0F0F3F0F0F0F4F0F2F9F9F8F2F5F1F2F0F3F1F1F2F8F3F3F5F2F8F5F0F0F1F0F1F5F5F5F0F0F0F1F0F0F1F9F0F0F5F5F4F1F0F9F6F7F3F8F0F5F0F0F1F3F7F3F7F4F2F4F5F0F0F1F7F4F1F0F0F7C4F2F5F1F2F2F0F1F1F5F0F4F1F2F3F4F5F0F0F0F0F0F5F3F3F7F1F0F0F0F0F0F3F6C3F1F1D2C1F1F1F1F4F6F0F1F3F5F5F0F6F84040404040F5F4D2C1D2C2D2C340E7C2D6D2E240404040404040404040E0E0E4A399858388A3404040404040E0F9F9F9F9C1E940404040F5F2F8D5D3C4F9F7F8F0F5F7C1C7D5E200017B3768BFC2CCF0820706020103A00000020749F107950000008000251203000000000012210978052818000000000000000080
+Response:	00A0F1F1F1F0703000030EC08200F1F5F3F7F4F2F4F5F0F0F1F7F4F1F0F0F7F0F0F4F0F0F0F0F0F0F0F0F0F0F0F3F0F0F0F4F0F2F9F9F8F2F5F1F2F0F3F1F1F2F8F3F3F1F5F0F0F0F0F0F3F9F6F6F5F8F1F3F0F1F0F9F6F7F3F8F0F5F0F0F1F5F3F3F7F1F0F0F0F0F0F3F6F5F8F1F3F0F1F0F0F0C3F1F1D2C1F1F1F1F4F6F0F1F3F5F5F0F6F84040404040F9F7F8F0F1F7C1C7D5E200010AF81A92D8F617A4683030
+==========================================================================================
+Interpreting message with Transaction Identifier 3966581301
+Request: message type 1100
+   Message type identifier                            = "1100"
+      1 - ISO8583:1993
+      1 - authorization
+      0 - request
+      0 - acquirer
+      
+   Bitmap 1                                           = "70 30 25 C1 28 E0 82 00"
+      0        1         2         3         4         5         6    
+      1234567890123456789012345678901234567890123456789012345678901234
+      0111000000110000001001011100000100101000111000001000001000000000
+         Field 002 - Primary Account Number (PAN) is set
+         Field 003 - Processing Code is set
+         Field 004 - Amount, Transaction is set
+         Field 011 - Systems Trace Audit Number is set
+         Field 012 - Date And Time, Local Transaction is set
+         Field 019 - Country Code, Acquiring Institution is set
+         Field 022 - Point Of Service Data Code is set
+         Field 024 - Function Code is set
+         Field 025 - Message Reason Code is set
+         Field 026 - Card Acceptor Business Code is set
+         Field 032 - Acquiring Institution Identification Code is set
+         Field 035 - Track 2 Data is set
+         Field 037 - Retrieval Reference Number is set
+         Field 041 - Card Acceptor Terminal Identification is set
+         Field 042 - Card Acceptor Identification Code is set
+         Field 043 - Card Acceptor Name/location is set
+         Field 049 - Currency Code, Transaction is set
+         Field 055 - Integrated Circuit Card System Related Data is set
+         
+      
+   002 Primary Account Number                         = "37*********1007"
+      IIN                                              = "37****" (American Express)
+      Account                                          = "*****100"
+      Check Digit                                      = "7"
+      
+   003 Processing Code                                = "004000" (Card Authorization Request)
+   004 Amount, Transaction                            = "000000003000" (30.00 Euro)
+   011 Systems Trace Audit Number                     = "402998"
+   012 Date And Time, Local Transaction               = "251203112833" (December 3rd, 2025, 11:28:33 AM)
+      Year    : 25 (2025)
+      Month   : 12 (December)
+      Day     : 03 (3rd)
+      Time    : 11:28:33 (11:28:33 AM)
+      
+   019 Country Code, Acquiring Institution            = "528" (Netherlands (the))
+   022 Point Of Service Data Code                     = "500101555000"
+      Subfield 1-Card Data Input Capability            = "5" (Integrated Circuit Card (ICC))
+      Subfield 2-Cardholder Authentication Capability  = "0" (No electronic authentication or unknown)
+      Subfield 3-Card Capture Capability               = "0" (None or unknown)
+      Subfield 4-Operating Environment                 = "1" (On premises of card acceptor, attended)
+      Subfield 5-Cardholder Present                    = "0" (Cardmember present)
+      Subfield 6-Card present                          = "1" (Card present)
+      Subfield 7-Card Data Input Mode                  = "5" (Integrated Circuit Card (ICC))
+      Subfield 8-Cardmember Authentication Method      = "5" (Manual signature verification)
+      Subfield 9-Cardmember Authentication Entity      = "5" (Other)
+      Subfield 10-Card Data Output Capability          = "0" (Unknown)
+      Subfield 11-Terminal Output Capability           = "0" (Unknown)
+      Subfield 12-PIN Capture Capability               = "0" (No PIN capture capability)
+      
+   024 Function Code                                  = "100" (Authorization Request)
+   025 Message Reason Code                            = "1900"
+   026 Card Acceptor Business Code                    = "5541" (Service Stations (with or without Ancillary Services))
+   032 Acquiring Institution Identification Code      = "673805001"
+   035 Track 2 Data                                   = "374245001741007D251220115041234500000"
+      IIN                                              = "37****" (American Express)
+      Account                                          = "*****100"
+      Check Digit                                      = "7"
+      Field Separator                                  = "D"
+      Expiration Date                                  = "2512" (December, 2025)
+      Subfield 3 - Service Code                        = "201"
+         Interchange Designator                           = "2" (Chip card.)
+         Service code                                     = "01" (No restrictions.)
+         
+      Effective Date                                   = "1504" (April, 2015)
+      Discretionary Data                               = "12345000"
+      Language Code                                    = "00"
+      
+   037 Retrieval Reference Number                     = "533710000036"
+   041 Card Acceptor Terminal Identification          = "C11KA111"
+   042 Card Acceptor Identification Code              = "4601355068     " (SE Number)
+   043 Card Acceptor Name/location                    = "KAKBKC XBOKS          \\Utrecht      \9999AZ    528NLD"
+      Subfield 1 - PSP and Submerchant Name            = "KAKBKC XBOKS          "
+      Subfield 1 - City                                = "Utrecht      "
+      Subfield 2 - Postal Code                         = "9999AZ    "
+      Subfield 3 - Region Code                         = "528"
+      Subfield 4 - Country Code                        = "NLD" (Netherlands (the))
+      
+   049 Currency Code, Transaction                     = "978" (Euro)
+   055 Integrated Circuit Card System Related Data    = '30 35 37 C1 C7 D5 E2 00 01 7B 37 68 BF C2 CC F0 82 07 06 02 01 03 A0 00 00 02 07 49 F1 07 95 00 00 00 80 00 25 12 03 00 00 00 00 00 12 21 09 78 05 28 18 00 00 00 00 00 00 00 00 80'
+      American Express Application Cryptogram (re)computation.
+         Key Derivation Index                = 02
+         Derivation Data                     = 74 24 50 01 74 10 07 00
+         Master Key                          = 10 E5 16 B5 A8 46 97 75 54 8F E3 68 9D 75 F1 29
+         Derived card key                    = 2E 1E 37 09 28 C0 C7 C8 45 7B A2 46 36 A4 4F 94
+         Data block                          = 00 00 00 00 12 21 00 00 00 00 00 00 05 28 00 00 00 80 00 09 78 25 12 03 00 02 07 49 F1 18 00 07 95 03 A0 00 00
+            Amount, Authorised                = 00 00 00 00 12 21
+            Amount, Other                     = 00 00 00 00 00 00
+            Terminal Country Code             = 05 28
+            Terminal Verification Results     = 00 00 00 80 00
+            Transaction Currency Code         = 09 78
+            Transaction Date                  = 25 12 03
+            Transaction Type                  = 00
+            Unpredictable Number              = 02 07 49 F1
+            Application Interchange Profile   = 18 00
+            Application Transaction Counter   = 07 95
+            Card Verification Results Length  = 03
+            Card Verification Results         = A0 00 00
+            
+         Recalculated Application Cryptogram = 7B 37 68 BF C2 CC F0 82
+         
+      ICC Header Version Name                          = "AGNS"
+      ICC Header Version Number                        = '00 01'
+      Subfield 1 - Application Cryptogram              = '7B 37 68 BF C2 CC F0 82'
+      Recalculated Application Cryptogram              = '7B 37 68 BF C2 CC F0 82'
+      Subfield 2 - Issuer Application Data (IAD)       = '06 02 01 03 A0 00 00'
+         Length Indicator                                 = "06" (6)
+         Derivation Key Index                             = "02" (2)
+         Cryptogram Version Number                        = "01" (1)
+         Card Verification Results                        = "A0 00 00"
+            Byte 1 - Length indicator                                                   = "3"
+            Byte 2, Bits 8-7 - 2nd Generate AC Result                                   = "10" (Not requested)
+                    Bits 6-5 - 1st Generate AC Result                                   = "10" (ARQC)
+                    Bit 4 - Issuer Authentication Successful?                           = "0" (No)
+                    Bit 3 - Offline PIN Verification Performed?                         = "0" (No)
+                    Bit 2 - Offline PIN Verification failed?                            = "0" (No)
+                    Bit 1 - Unable to go online?                                        = "0" (No)
+            Byte 3, Bit 8 - Last online transaction not completed?                      = "0" (Yes)
+                    Bit 7 - PIN Try Limit Exceeded?                                     = "0" (No)
+                    Bit 6 - Exceeded velocity counters?                                 = "0" (No)
+                    Bit 5 - New Card?                                                   = "0" (No)
+                    Bit 4 - Issuer Authentication failure when mandatory?               = "0" (No)
+                    Bit 3 - Issuer Authentication not performed after online?           = "0" (No)
+                    Bit 2 - Application Blocked because of PIN Try Counter?             = "0" (No)
+                    Bit 1 - Static data authentication failed?                          = "0" (No)
+            Byte 4, Bits 8-5 - Number of Issuer Script Commands successfully processed  = "0"
+                    Bit 4 - Issuer Script Processing failed on last transaction?        = "0" (No)
+                    Bit 3 - Offline Dynamic Data Authentication failed?                 = "0" (No)
+                    Bit 2 - Offline Dynamic Data Authentication performed?              = "0" (No)
+                    Bit 1 - RFU                                                         = "0"
+            
+         
+      Subfield 3 - Unpredictable Number                = '02 07 49 F1' (34032113)
+      Subfield 4 - Application Transaction Counter (AT = '07 95' (1941)
+      Subfield 5 - Terminal Verification Results (TVR) = '00 00 00 80 00'
+         Byte 1 bit 8   = 0      Offline data authentication was performed
+                bit 7   = 0      SDA passed or not performed
+                bit 6   = 0      No ICC data missing
+                bit 5   = 0      Card does not appear on terminal exception file
+                bit 4   = 0      DDA passed or not performed
+                bit 3   = 0      CDA passed or not performed
+                bit 2   = 0      SDA not selected
+                bit 1   = 0      RFU
+         Byte 2 bit 8   = 0      ICC and terminal do not have different application versions
+                bit 7   = 0      No Expired application
+                bit 6   = 0      Application effective
+                bit 5   = 0      Requested service allowed for card product
+                bit 4   = 0      No New card
+                bit 3   = 0      RFU
+                bit 2   = 0      RFU
+                bit 1   = 0      RFU
+         Byte 3 bit 8   = 0      Cardholder verification was successful or not performed
+                bit 7   = 0      Recognised CVM
+                bit 6   = 0      PIN Try Limit not exceeded
+                bit 5   = 0      No PIN entry required (PIN pad may or may not be present or may or may not be working)
+                bit 4   = 0      No PIN entry required (PIN pad may or may not be present)
+                bit 3   = 0      No Online PIN entered
+                bit 2   = 0      RFU
+                bit 1   = 0      RFU
+         Byte 4 bit 8   = 1      Transaction exceeds floor limit
+                bit 7   = 0      Lower consecutive offline limit not exceeded
+                bit 6   = 0      Upper consecutive offline limit not exceeded
+                bit 5   = 0      Transaction not selected randomly for online processing
+                bit 4   = 0      Merchant did not force transaction online
+                bit 3   = 0      RFU
+                bit 2   = 0      RFU
+                bit 1   = 0      RFU
+         Byte 5 bit 8   = 0      No Default TDOL used
+                bit 7   = 0      Issuer authentication passed or not performed
+                bit 6   = 0      Script processing passed before final GENERATE AC or no script received
+                bit 5   = 0      Script processing passed after final GENERATE AC or no script received
+                bit 4   = 0      RFU
+                bit 3   = 0      RFU
+                bit 2   = 0      RFU
+                bit 1   = 0      RFU
+         
+      Subfield 6 - Transaction Date                    = '25 12 03' (December 3rd, 2025)
+      Subfield 7 - Transaction Type                    = '00' (Debit(e.g., Purchase))
+      Subfield 8 - Amount Authorized                   = '00 00 00 00 12 21' (12.21 Euro)
+      Subfield 9 - Transaction Currency Code           = '09 78' (Euro)
+      Subfield 10 - Terminal Country Code              = '05 28'
+      Subfield 11 - Application Interchange Profile (A = '18 00'
+         Byte 1 bit 8 = 0      RFU
+                bit 7 = 0      Offline static data authentication is NOT supported
+                bit 6 = 0      Offline dynamic data authentication is NOT supported
+                bit 5 = 1      Cardholder verification is supported
+                bit 4 = 1      Terminal risk management is to be performed
+                bit 3 = 0      Issuer authentication is NOT supported
+                bit 2 = 0      Reserved for use by the EMV Contactless Specifications
+                bit 1 = 0      Combined DDA / GENERATE AC NOT supported
+         Byte 2 bit 8 = 0      EMV Contactless NOT supported
+                bit 7 = 0      Reserved for use by the EMV Contactless Specifications
+                bit 6 = 0      RFU
+                bit 5 = 0      RFU
+                bit 4 = 0      RFU
+                bit 3 = 0      RFU
+                bit 2 = 0      RFU
+                bit 1 = 0      RFU
+         
+      Subfield 12 - Amount, Other                      = '00 00 00 00 00 00' (0.00 Euro)
+      Subfield 13 - Application PAN Sequence Number    = '00' (0)
+      Subfield 14 - Cryptogram Information Data (CID)  = '80'
+         Byte 1 bit 8-7 = 10     ARQC
+                bit 6-5 = 00     Payment System specific cryptogram
+                bit 4   = 0      No advice required
+                bit 3-1 = 000    No information given
+         
+      Subfield 15 - Reserved For Future Use            = ""
+      
+   
+Response: message type 1110
+   Message type identifier                            = "1110"
+      1 - ISO8583:1993
+      1 - authorization
+      1 - request response
+      0 - acquirer
+      
+   Bitmap 1                                           = "70 30 00 03 0E C0 82 00"
+      0        1         2         3         4         5         6    
+      1234567890123456789012345678901234567890123456789012345678901234
+      0111000000110000000000000000001100001110110000001000001000000000
+         Field 002 - Primary Account Number (PAN) is set
+         Field 003 - Processing Code is set
+         Field 004 - Amount, Transaction is set
+         Field 011 - Systems Trace Audit Number is set
+         Field 012 - Date And Time, Local Transaction is set
+         Field 031 - Acquirer Reference Data is set
+         Field 032 - Acquiring Institution Identification Code is set
+         Field 037 - Retrieval Reference Number is set
+         Field 038 - Approval Code is set
+         Field 039 - Action Code is set
+         Field 041 - Card Acceptor Terminal Identification is set
+         Field 042 - Card Acceptor Identification Code is set
+         Field 049 - Currency Code, Transaction is set
+         Field 055 - Integrated Circuit Card System Related Data is set
+         
+      
+   002 Primary Account Number                         = "37*********1007"
+      IIN                                              = "37****" (American Express)
+      Account                                          = "*****100"
+      Check Digit                                      = "7"
+      
+   003 Processing Code                                = "004000" (Card Authorization Request)
+   004 Amount, Transaction                            = "000000003000" (30.00 Euro)
+   011 Systems Trace Audit Number                     = "402998"
+   012 Date And Time, Local Transaction               = "251203112833" (December 3rd, 2025, 11:28:33 AM)
+      Year    : 25 (2025)
+      Month   : 12 (December)
+      Day     : 03 (3rd)
+      Time    : 11:28:33 (11:28:33 AM)
+      
+   031 Acquirer Reference Data                        = "000003966581301"
+   032 Acquiring Institution Identification Code      = "673805001"
+   037 Retrieval Reference Number                     = "533710000036"
+   038 Approval Code                                  = "581301"
+   039 Action Code                                    = "000" (Approved)
+   041 Card Acceptor Terminal Identification          = "C11KA111"
+   042 Card Acceptor Identification Code              = "4601355068     " (SE Number)
+   049 Currency Code, Transaction                     = "978" (Euro)
+   055 Integrated Circuit Card System Related Data    = "C1 C7 D5 E2 00 01 0A F8 1A 92 D8 F6 17 A4 68 30 30"
+      Subfield 1 - ICC Header Version Name             = "AGNS"
+      Subfield 2 - ICC Header Version Number           = "00 01"
+      Subfield 3 - Issuer Authentication Data          = "F8 1A 92 D8 F6 17 A4 68 30 30"
+         ARPC                                             = "F8 1A 92 D8 F6 17 A4 68"
+         Response Code                                    = "00" (Accepted)
+         
