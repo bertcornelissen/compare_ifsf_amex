@@ -1,14 +1,15 @@
 # ISO 8583 Message Comparison Tool
 
-A CLI tool to compare ISO 8583 message files and identify differences at both field and subfield levels.
+A tool to compare ISO 8583 message files and identify differences at both field and subfield levels. Available as both a **Command-Line Interface (CLI)** and a **Web-Based GUI (Streamlit)**.
 
 ## Features
 
+- **Two Interfaces**: Use either CLI for automation/scripts or Streamlit GUI for interactive analysis
 - **Detailed Comparison**: Compares both Request and Response messages
 - **Subfield-Level Analysis**: Shows differences within complex fields (e.g., Field 22, Field 55)
 - **Configurable Ignoring**: Skip specific fields or subfields via YAML configuration
 - **Impact Classification**: Categorizes changes as FINANCIAL, SECURITY, OPERATIONAL, or FORMAT changes
-- **Flexible Output**: Print to console or save to file
+- **Flexible Output**: Print to console, save to file, or view in interactive web interface
 
 ## Installation
 
@@ -19,42 +20,69 @@ uv sync
 Or with pip:
 
 ```bash
-pip install pyyaml
+pip install pyyaml streamlit
 ```
 
 ## Usage
 
-### Basic Comparison
+### 🖥️ Streamlit GUI (Recommended)
+
+Launch the interactive web interface:
+
+```bash
+uv run streamlit run compare_gui.py
+```
+
+Then open your browser to `http://localhost:8501` and:
+
+1. Upload two ISO 8583 message files
+2. Select which messages to compare (Request, Response, or both)
+3. Click "Compare Messages"
+4. View interactive results with expandable sections
+5. Download the full text report
+
+**GUI Features:**
+
+- 📤 Drag-and-drop file upload
+- ⚙️ Configuration viewer in sidebar
+- 📊 Visual metrics and color-coded verdicts
+- 🔍 Expandable field change details with side-by-side comparison
+- 📥 Download button for full text report
+- 🔄 Hot-reload configuration without restarting
+
+### 💻 Command-Line Interface
+
+#### Basic Comparison
 
 ```bash
 uv run python main.py file1.txt file2.txt
 ```
 
-### Compare Only Request Messages
+#### Compare Only Request Messages
 
 ```bash
 uv run python main.py file1.txt file2.txt --request-only
 ```
 
-### Compare Only Response Messages
+#### Compare Only Response Messages
 
 ```bash
 uv run python main.py file1.txt file2.txt --response-only
 ```
 
-### Save Report to File
+#### Save Report to File
 
 ```bash
 uv run python main.py file1.txt file2.txt -o report.txt
 ```
 
-### Use Custom Configuration
+#### Use Custom Configuration
 
 ```bash
 uv run python main.py file1.txt file2.txt -c custom_config.yaml
 ```
 
-### Verbose Output
+#### Verbose Output
 
 ```bash
 uv run python main.py file1.txt file2.txt --verbose
@@ -170,6 +198,17 @@ options:
 ```
 
 ## Examples
+
+### GUI Usage
+
+```bash
+# Launch the Streamlit GUI
+uv run streamlit run compare_gui.py
+
+# Then open http://localhost:8501 in your browser
+```
+
+### CLI Usage
 
 Compare two message files with default configuration:
 
