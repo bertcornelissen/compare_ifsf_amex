@@ -8,6 +8,9 @@ try:
     import yaml
 except ImportError:
     yaml = None
+import iso8583
+from msg_specs import spec, field_55_spec
+
 
 # Global configuration - will be loaded from config file
 FIELD_CLASSES = {}
@@ -124,69 +127,84 @@ def split_messages(text: str) -> tuple[str, str]:
     response_start = None
     
     for i, line in enumerate(lines):
-        if line.startswith("Request: message type"):
+        if line.startswith("Request:"):
             request_start = i
-        elif line.startswith("Response: message type"):
+        elif line.startswith("Response:"):
             response_start = i
             break
-    
-    if request_start is not None and response_start is not None:
-        request_text = "\n".join(lines[request_start:response_start])
-        response_text = "\n".join(lines[response_start:])
-        return request_text, response_text
-    
-    # If no split found, return entire text as request
-    return text, ""
 
+    if request_start is not None and response_start is not None:
+        request_text = "".join(lines[request_start].lstrip("Request: "))
+        response_text = "".join(lines[response_start].lstrip("Response: "))
+        return request_text[5:], response_text[5:]
+
+    raise ValueError("No Request and Respose msg found")    
+
+
+def parse_sub_field(data, spec):
+    # Accept str or bytes
+    if isinstance(data, str):
+        data = data.encode("ascii")
+
+    offset = 0
+    length_data = len(data)
+    result = {}
+
+    for field_nr, field in spec.items():
+        if offset >= length_data:
+            break  # no more data available
+
+        len_type = field["len_type"]
+        max_len = field["max_len"]
+        data_enc = field.get("data_enc", "ascii")
+
+        # --- fixed-length field ---
+        if len_type == 0:
+            field_len = max_len
+
+        # --- variable-length field ---
+        else:
+            # read length indicator
+            if offset + len_type > length_data:
+                break
+
+            len_bytes = data[offset:offset + len_type]
+            field_len = int(len_bytes.decode("ascii"), 16) * 2
+            offset += len_type
+
+        # read field data
+        if offset + field_len > length_data:
+            break
+
+        raw_value = data[offset:offset + field_len]
+        offset += field_len
+
+        result[field_nr] = raw_value.decode(data_enc)
+
+    return result
 
 def parse_message(text: str) -> dict[str, ParsedField]:
     fields: dict[str, ParsedField] = {}
     current: Optional[ParsedField] = None
 
-    FIELD_HEADER_RE = re.compile(r'\s*(\d{3})\s+(.+?)\s+=\s+[\'"]?(.*?)[\'"]?$')
-    # Match both with and without leading spaces for numbered subfields
-    # Handles formats like "Subfield 1 - Name" and "Subfield 1-Name"
-    SUBFIELD_RE = re.compile(r'^\s*Subfield\s+(\d+)\s*-\s*(.+?)\s*=\s*(.+?)$')
-    # For Field 55 and similar complex fields with named attributes (must have at least 6 spaces)
-    NAMED_ATTRIBUTE_RE = re.compile(r'^\s{6,}([A-Za-z][\w\s\(\)/]+?)\s*=\s*(.+?)$')
+    msg_bytes = bytes.fromhex(text)
 
-    for line in text.splitlines():
-        header = FIELD_HEADER_RE.match(line)
-        if header:
-            number, name, value = header.groups()
-            current = ParsedField(
-                number=number,
-                name=name.strip(),
-                raw_value=value.strip(),
-                subfields={}
-            )
-            fields[number] = current
-            continue
+    doc_dec, doc_enc = iso8583.decode(msg_bytes, spec)
 
-        if current:
-            # Parse numbered Subfield lines (highest priority - check first)
-            sub_match = SUBFIELD_RE.match(line)
-            if sub_match:
-                sub_no, sub_name, value = sub_match.groups()
-                # Clean up value - remove quotes and parenthetical content at end
-                value = value.split('(')[0].strip()
-                value = value.strip('"\'')
-                current.subfields[f"{sub_no}-{sub_name.strip()}"] = value
-                continue
-            
-            # Parse named attribute lines (for Field 55 and similar)
-            # Only if not already matched as a subfield
-            attr_match = NAMED_ATTRIBUTE_RE.match(line)
-            if attr_match:
-                attr_name, value = attr_match.groups()
-                # Skip deeply nested byte-level details
-                if ', Bit' not in line and 'bit ' not in line:
-                    # Clean up value
-                    value = value.split('(')[0].strip()
-                    value = value.strip('"\'')
-                    # Don't overwrite numbered subfields with named attributes
-                    if not any(k.startswith(f"{num}-") for num in range(1, 100) for k in [attr_name]):
-                        current.subfields[attr_name.strip()] = value
+    for k, v in doc_dec.items():
+        current = ParsedField(
+            number=k,
+            name=spec[k]["desc"],
+            raw_value=v,
+            subfields={}
+        )
+        fields[k] = current
+
+        ss = spec[k].get("sub_field_specs")
+        if ss is not None:
+            parsed = parse_sub_field(v, ss)
+            for k_sub, v_sub in parsed.items():
+                current.subfields[ss[k_sub]["desc"]] = v_sub
 
     return fields
 
@@ -404,7 +422,7 @@ Examples:
     # Split into Request and Response sections
     req_a, resp_a = split_messages(text_a)
     req_b, resp_b = split_messages(text_b)
-    
+
     # Prepare output
     output_lines = []
     
@@ -413,7 +431,7 @@ Examples:
         output_lines.append("=" * 70)
         output_lines.append("COMPARING REQUEST MESSAGES")
         output_lines.append("=" * 70)
-        
+
         parsed_req_a = normalize(parse_message(req_a))
         parsed_req_b = normalize(parse_message(req_b))
         

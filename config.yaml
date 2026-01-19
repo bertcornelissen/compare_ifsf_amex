@@ -4,41 +4,30 @@
 # Field classification for impact assessment
 field_classes:
   FINANCIAL:
-    - "004" # Amount, Transaction
+    - "04" # Amount, Transaction
   SECURITY:
-    - "052" # PIN Data
-    - "053" # Security Related Control Information
-    - "055" # Integrated Circuit Card System Related Data
+    - "52" # PIN Data
+    - "53" # Security Related Control Information
+    - "55" # Integrated Circuit Card System Related Data
   OPERATIONAL:
-    - "007" # Date And Time, Transmission
-    - "011" # Systems Trace Audit Number
-    - "012" # Date And Time, Local Transaction
-    - "033" # Forwarding Institution Identification Code
+    - "07" # Date And Time, Transmission
+    - "11" # Systems Trace Audit Number
+    - "12" # Date And Time, Local Transaction
+    - "33" # Forwarding Institution Identification Code
 
 # Fields to completely ignore (entire field value is ignored)
 # These fields will be marked as <IGNORED> in comparison
 ignored_fields:
-  - "011" # STAN - Systems Trace Audit Number (changes per transaction)
-  # - "012"  # Local Transaction Date/Time (uncomment to ignore)
+  - "11" # STAN - Systems Trace Audit Number (changes per transaction)
+  # - "12" # Local Transaction Date/Time (uncomment to ignore)
+  - "p" # Primary Bitmap
 
 # Subfields to ignore within specific fields
 # Format: field_number: [list of subfield identifiers]
 ignored_subfields:
-  "007":
-    - "Time" # Ignore time component, compare only date
+  "55":
+    - "Transaction Date"
+    - "Unpredictable Number"
 
-  "012":
-    - "Day" # Ignore day
-    - "Time" # Ignore time component
-
-  "022":
-    # Point Of Service Data Code - ignore capabilities that vary by terminal
-    # - "2-Cardholder Authentication Capability"  # Uncomment to ignore
-    - "8-Cardmember Authentication Method"
-    - "9-Cardmember Authentication Entity"
-    - "10-Card Data Output Capability"
-    - "11-Terminal Output Capability"
-
-  "043":
-    # Card Acceptor Name/location
-    - "2-Postal Code" # Postal codes can vary slightly in format
+  "12":
+    - "Day"
