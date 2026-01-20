@@ -4,7 +4,11 @@ This guide explains how to customize the comparison behavior using the `config.y
 
 ## Quick Start
 
-The tool looks for `config.yaml` in the current directory by default. You can specify a different config file with the `-c` option:
+The tool looks for `config.yaml` in the current directory by default.
+
+**In the Streamlit GUI:** Enter the config file path in the sidebar.
+
+**In the CLI:** Use the `-c` option:
 
 ```bash
 uv run python main.py file1.txt file2.txt -c my_config.yaml

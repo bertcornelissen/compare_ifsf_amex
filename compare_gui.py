@@ -1,12 +1,19 @@
 import streamlit as st
 from pathlib import Path
-import tempfile
-import yaml
+import difflib
+from difflib import HtmlDiff
+
 from main import (
+    load_config,
     split_messages,
     parse_message,
+    normalize,
     diff_fields,
-    ParsedField
+    classify,
+    render_report,
+    FIELD_CLASSES,
+    IGNORED_FIELD_VALUES,
+    IGNORED_SUBFIELDS
 )
 
 # Page config
@@ -21,195 +28,38 @@ if 'comparison_done' not in st.session_state:
     st.session_state.comparison_done = False
 if 'results' not in st.session_state:
     st.session_state.results = {}
-if 'config' not in st.session_state:
-    st.session_state.config = None
+if 'file1_content' not in st.session_state:
+    st.session_state.file1_content = None
+if 'file2_content' not in st.session_state:
+    st.session_state.file2_content = None
 
-def load_session_config(config_path: str = "config.yaml") -> dict:
-    """Load configuration into session-specific dict (thread-safe for multiple users)."""
-    config = {
-        'field_classes': {},
-        'ignored_fields': set(),
-        'ignored_subfields': {}
-    }
-    
-    try:
-        config_file = Path(config_path)
-        if config_file.exists():
-            with open(config_file, 'r') as f:
-                yaml_config = yaml.safe_load(f)
-            
-            # Load field classes
-            if 'field_classes' in yaml_config:
-                config['field_classes'] = {
-                    category: set(fields) 
-                    for category, fields in yaml_config['field_classes'].items()
-                }
-            
-            # Load ignored fields
-            if 'ignored_fields' in yaml_config:
-                config['ignored_fields'] = set(yaml_config['ignored_fields'])
-            
-            # Load ignored subfields
-            if 'ignored_subfields' in yaml_config:
-                config['ignored_subfields'] = {
-                    field_num: set(subfields)
-                    for field_num, subfields in yaml_config['ignored_subfields'].items()
-                }
-            
-            return config
-    except Exception as e:
-        st.error(f"Error loading config: {e}")
-    
-    # Default configuration
-    config['field_classes'] = {
-        "FINANCIAL": {"004"},
-        "SECURITY": {"052", "053", "055"},
-        "OPERATIONAL": {"007", "011", "012", "033"},
-    }
-    config['ignored_fields'] = {"011"}
-    config['ignored_subfields'] = {
-        "007": {"Time"},
-        "012": {"Day", "Time"},
-        "022": {"8-Cardmember Authentication Method", "9-Cardmember Authentication Entity", 
-                "10-Card Data Output Capability", "11-Terminal Output Capability"},
-        "043": {"2-Postal Code"}
-    }
-    return config
-
-def normalize_with_config(fields: dict, config: dict) -> dict:
-    """Normalize fields using session-specific config."""
-    out = {}
-    ignored_fields = config['ignored_fields']
-    ignored_subfields = config['ignored_subfields']
-
-    for num, field in fields.items():
-        # Suppress entire field value?
-        if num in ignored_fields:
-            out[num] = ParsedField(
-                number=field.number,
-                name=field.name,
-                raw_value="<IGNORED>",
-                subfields={}
-            )
-            continue
-
-        # Otherwise suppress selected subfields
-        ignored_subs = ignored_subfields.get(num, set())
-        new_subfields = {
-            k: ("<IGNORED>" if k in ignored_subs else v)
-            for k, v in field.subfields.items()
-        }
-
-        out[num] = ParsedField(
-            number=field.number,
-            name=field.name,
-            raw_value=field.raw_value,
-            subfields=new_subfields
-        )
-
-    return out
-
-def classify_with_config(diff, config: dict) -> str:
-    """Classify differences using session-specific config."""
-    field_classes = config['field_classes']
-    changed_fields = set(diff.changed) | set(diff.added) | set(diff.removed)
-
-    if changed_fields & field_classes.get("FINANCIAL", set()):
-        return "FUNCTIONALLY DIFFERENT"
-
-    if changed_fields & field_classes.get("SECURITY", set()):
-        return "POTENTIALLY IMPACTFUL"
-
-    if diff.added or diff.removed:
-        return "FORMAT / ROUTING CHANGE ONLY"
-
-    if diff.changed:
-        return "OPERATIONAL DIFFERENCES ONLY"
-
-    return "NO DIFFERENCES"
-
-def render_report_local(diff, verdict: str, message_type: str = "") -> str:
-    """Render report (copied from main.py to avoid global state issues)."""
-    out = []
-
-    out.append(f"ISO 8583 Message Comparison Report - {message_type}")
-    out.append("=" * 50)
-    out.append("")
-    out.append(f"VERDICT: {verdict}")
-    out.append("")
-
-    out.append("Summary")
-    out.append("-------")
-    out.append(f"Fields added   : {len(diff.added)}")
-    out.append(f"Fields removed : {len(diff.removed)}")
-    out.append(f"Fields changed : {len(diff.changed)}")
-    out.append("")
-
-    if diff.added:
-        out.append("Fields Added")
-        out.append("------------")
-        for f in diff.added.values():
-            out.append(f"+ {f.number} {f.name}")
-        out.append("")
-
-    if diff.removed:
-        out.append("Fields Removed")
-        out.append("--------------")
-        for f in diff.removed.values():
-            out.append(f"- {f.number} {f.name}")
-        out.append("")
-
-    if diff.changed:
-        out.append("Fields Changed")
-        out.append("--------------")
-        for f in diff.changed.values():
-            out.append(f"! {f.number} {f.name}")
-            
-            if f.before and f.after and (f.before.subfields or f.after.subfields):
-                all_subfield_keys = set(f.before.subfields.keys()) | set(f.after.subfields.keys())
-                for sk in sorted(all_subfield_keys):
-                    before_val = f.before.subfields.get(sk, "<missing>")
-                    after_val = f.after.subfields.get(sk, "<missing>")
-                    if before_val != after_val:
-                        out.append(f"    {sk}:")
-                        out.append(f"      Before: {before_val}")
-                        out.append(f"      After : {after_val}")
-            else:
-                if f.before:
-                    out.append(f"  Before: {f.before.raw_value}")
-                if f.after:
-                    out.append(f"  After : {f.after.raw_value}")
-            out.append("")
-
-    return "\n".join(out)
-
-def display_config_info(config):
+def display_config_info():
     """Display current configuration in sidebar."""
     with st.sidebar:
         st.header("⚙️ Configuration")
         
         with st.expander("Field Classes", expanded=False):
-            for category, fields in config['field_classes'].items():
+            for category, fields in FIELD_CLASSES.items():
                 st.write(f"**{category}:**")
                 st.write(", ".join(sorted(fields)))
         
         with st.expander("Ignored Fields", expanded=False):
-            if config['ignored_fields']:
-                st.write(", ".join(sorted(config['ignored_fields'])))
+            if IGNORED_FIELD_VALUES:
+                st.write(", ".join(sorted(IGNORED_FIELD_VALUES)))
             else:
                 st.write("None")
         
         with st.expander("Ignored Subfields", expanded=False):
-            if config['ignored_subfields']:
-                for field_num, subfields in sorted(config['ignored_subfields'].items()):
+            if IGNORED_SUBFIELDS:
+                for field_num, subfields in sorted(IGNORED_SUBFIELDS.items()):
                     st.write(f"**Field {field_num}:**")
                     for subfield in sorted(subfields):
                         st.write(f"  - {subfield}")
             else:
                 st.write("None")
 
-def compare_files(file1_content, file2_content, config, compare_request=True, compare_response=True):
-    """Compare two ISO 8583 message files using session-specific config."""
+def compare_files(file1_content, file2_content, compare_request=True, compare_response=True):
+    """Compare two ISO 8583 message files."""
     results = {}
     
     # Split into Request and Response sections
@@ -218,36 +68,40 @@ def compare_files(file1_content, file2_content, config, compare_request=True, co
     
     # Compare Request messages
     if compare_request:
-        parsed_req_a = normalize_with_config(parse_message(req_a), config)
-        parsed_req_b = normalize_with_config(parse_message(req_b), config)
+        parsed_req_a = normalize(parse_message(req_a))
+        parsed_req_b = normalize(parse_message(req_b))
         
         diff_req = diff_fields(parsed_req_a, parsed_req_b)
-        verdict_req = classify_with_config(diff_req, config)
-        report_req = render_report_local(diff_req, verdict_req, "REQUEST")
+        verdict_req = classify(diff_req)
+        report_req = render_report(diff_req, verdict_req, "REQUEST")
         
         results['request'] = {
             'diff': diff_req,
             'verdict': verdict_req,
             'report': report_req,
             'fields_parsed_a': len(parsed_req_a),
-            'fields_parsed_b': len(parsed_req_b)
+            'fields_parsed_b': len(parsed_req_b),
+            'raw_a': req_a,
+            'raw_b': req_b
         }
     
     # Compare Response messages if they exist
     if compare_response and resp_a and resp_b:
-        parsed_resp_a = normalize_with_config(parse_message(resp_a), config)
-        parsed_resp_b = normalize_with_config(parse_message(resp_b), config)
+        parsed_resp_a = normalize(parse_message(resp_a))
+        parsed_resp_b = normalize(parse_message(resp_b))
         
         diff_resp = diff_fields(parsed_resp_a, parsed_resp_b)
-        verdict_resp = classify_with_config(diff_resp, config)
-        report_resp = render_report_local(diff_resp, verdict_resp, "RESPONSE")
+        verdict_resp = classify(diff_resp)
+        report_resp = render_report(diff_resp, verdict_resp, "RESPONSE")
         
         results['response'] = {
             'diff': diff_resp,
             'verdict': verdict_resp,
             'report': report_resp,
             'fields_parsed_a': len(parsed_resp_a),
-            'fields_parsed_b': len(parsed_resp_b)
+            'fields_parsed_b': len(parsed_resp_b),
+            'raw_a': resp_a,
+            'raw_b': resp_b
         }
     
     return results
@@ -266,6 +120,85 @@ def display_verdict(verdict):
         st.error(f"❌ {verdict}")
     else:
         st.write(verdict)
+
+def display_side_by_side_diff(text1, text2, title1="File 1", title2="File 2"):
+    """Display side-by-side diff using difflib.HtmlDiff."""
+    
+    # Split texts into lines
+    lines1 = text1.splitlines()
+    lines2 = text2.splitlines()
+
+    # Generate HTML diff
+    html_diff = HtmlDiff(wrapcolumn=100).make_file(
+        lines1,
+        lines2,
+        title1,
+        title2
+    )
+
+    # Add custom CSS to improve color scheme
+    dark_css = """
+    <style>
+    body {
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        display: flex; /* Use flexbox for centering */
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
+        height: 100vh; /* Full viewport height */
+        margin: 0; /* Remove default margin */
+    }
+
+    table.diff {
+        font-size: 13px;
+        font-family: Consolas, Monaco, 'Courier New', monospace;
+        line-height: 1.4;
+        border-collapse: collapse;
+        margin-left: 0px; /* Shift the table to the left */
+        width: 95%; /* Use most of the available width */
+    }
+
+    /* Table headers */
+    .diff_header {
+        background-color: #252526;
+        color: #cccccc;
+    }
+
+    /* Line numbers */
+    .diff_header a {
+        color: #6a9955;
+        text-decoration: none;
+    }
+
+    /* Added / removed lines */
+    .diff_add {
+        background-color: #144212; /* Dark green for added lines */
+        color: #ffffff; /* White text for contrast */
+    }
+
+    .diff_sub {
+        background-color: #8B0000; /* Dark red for removed lines */
+        color: #ffffff; /* White text for contrast */
+    }
+
+    /* Changed text */
+    .diff_chg {
+        background-color: #1E90FF; /* Dodger blue for changed lines */
+        color: #ffffff; /* White text for contrast */
+    }
+
+    /* Table borders */
+    table.diff td {
+        border: 1px solid #333333;
+    }
+    </style>
+    """
+
+    # Inject custom CSS into the HTML
+    htmlx = html_diff.replace("</head>", dark_css + "</head>")
+
+    # Display in streamlit using st.html
+    st.html(htmlx)
 
 def display_diff_summary(diff):
     """Display a summary of differences in columns."""
@@ -331,14 +264,18 @@ def main():
     st.title("🔍 ISO 8583 Message Comparator")
     st.markdown("Compare two ISO 8583 message files and analyze their differences")
     
-    # Load configuration into session state (isolated per user)
+    # Load configuration
     config_path = st.sidebar.text_input("Config File", value="config.yaml")
-    if st.sidebar.button("Reload Configuration") or st.session_state.config is None:
+    if st.sidebar.button("Reload Configuration"):
         with st.spinner("Loading configuration..."):
-            st.session_state.config = load_session_config(config_path)
+            load_config(config_path)
             st.sidebar.success("Configuration loaded successfully!")
     
-    display_config_info(st.session_state.config)
+    # Load config on first run
+    if not FIELD_CLASSES:
+        load_config(config_path)
+    
+    display_config_info()
     
     # Main content area
     st.header("Upload Files to Compare")
@@ -373,11 +310,14 @@ def main():
                     file1_content = file1.read().decode('utf-8')
                     file2_content = file2.read().decode('utf-8')
                     
-                    # Perform comparison with session-specific config
+                    # Store file contents for diff view
+                    st.session_state.file1_content = file1_content
+                    st.session_state.file2_content = file2_content
+                    
+                    # Perform comparison
                     results = compare_files(
                         file1_content, 
                         file2_content, 
-                        st.session_state.config,
                         compare_request, 
                         compare_response
                     )
@@ -399,69 +339,116 @@ def main():
         st.divider()
         st.header("📊 Comparison Results")
         
-        # File names
-        st.write(f"**File 1:** {st.session_state.file1_name}")
-        st.write(f"**File 2:** {st.session_state.file2_name}")
-        
-        results = st.session_state.results
-        
-        # Request comparison results
-        if 'request' in results:
-            st.subheader("📤 REQUEST Message Comparison")
-            
-            display_verdict(results['request']['verdict'])
-            
-            st.write(f"Fields parsed from File 1: {results['request']['fields_parsed_a']}")
-            st.write(f"Fields parsed from File 2: {results['request']['fields_parsed_b']}")
-            
-            display_diff_summary(results['request']['diff'])
-            display_field_changes(results['request']['diff'])
-            
-            # Show full text report
-            with st.expander("📄 View Full Text Report", expanded=False):
-                st.text(results['request']['report'])
-        
-        # Response comparison results
-        if 'response' in results:
-            st.divider()
-            st.subheader("📥 RESPONSE Message Comparison")
-            
-            display_verdict(results['response']['verdict'])
-            
-            st.write(f"Fields parsed from File 1: {results['response']['fields_parsed_a']}")
-            st.write(f"Fields parsed from File 2: {results['response']['fields_parsed_b']}")
-            
-            display_diff_summary(results['response']['diff'])
-            display_field_changes(results['response']['diff'])
-            
-            # Show full text report
-            with st.expander("📄 View Full Text Report", expanded=False):
-                st.text(results['response']['report'])
-        
-        # Download button for combined report
-        st.divider()
-        combined_report = []
-        if 'request' in results:
-            combined_report.append("=" * 70)
-            combined_report.append("COMPARING REQUEST MESSAGES")
-            combined_report.append("=" * 70)
-            combined_report.append(results['request']['report'])
-        
-        if 'response' in results:
-            combined_report.append("\n" + "=" * 70)
-            combined_report.append("COMPARING RESPONSE MESSAGES")
-            combined_report.append("=" * 70)
-            combined_report.append(results['response']['report'])
-        
-        report_text = "\n".join(combined_report)
-        
-        st.download_button(
-            label="📥 Download Full Report",
-            data=report_text,
-            file_name="comparison_report.txt",
-            mime="text/plain",
-            use_container_width=True
+        # View mode selector - Make it prominent
+        st.subheader("Choose View Mode")
+        view_mode = st.radio(
+            "How would you like to view the comparison?",
+            ["Comparison Report", "Side-by-Side Diff"],
+            horizontal=True,
+            help="Comparison Report shows structured field differences. Side-by-Side Diff shows character-level differences in HTML format."
         )
+        
+        if view_mode == "Comparison Report":
+            # File names
+            st.write(f"**File 1:** {st.session_state.file1_name}")
+            st.write(f"**File 2:** {st.session_state.file2_name}")
+            
+            results = st.session_state.results
+            
+            # Request comparison results
+            if 'request' in results:
+                st.subheader("📤 REQUEST Message Comparison")
+                
+                display_verdict(results['request']['verdict'])
+                
+                st.write(f"Fields parsed from File 1: {results['request']['fields_parsed_a']}")
+                st.write(f"Fields parsed from File 2: {results['request']['fields_parsed_b']}")
+                
+                display_diff_summary(results['request']['diff'])
+                display_field_changes(results['request']['diff'])
+                
+                # Show full text report
+                with st.expander("📄 View Full Text Report", expanded=False):
+                    st.text(results['request']['report'])
+            
+            # Response comparison results
+            if 'response' in results:
+                st.divider()
+                st.subheader("📥 RESPONSE Message Comparison")
+                
+                display_verdict(results['response']['verdict'])
+                
+                st.write(f"Fields parsed from File 1: {results['response']['fields_parsed_a']}")
+                st.write(f"Fields parsed from File 2: {results['response']['fields_parsed_b']}")
+                
+                display_diff_summary(results['response']['diff'])
+                display_field_changes(results['response']['diff'])
+                
+                # Show full text report
+                with st.expander("📄 View Full Text Report", expanded=False):
+                    st.text(results['response']['report'])
+            
+            # Download button for combined report
+            st.divider()
+            combined_report = []
+            if 'request' in results:
+                combined_report.append("=" * 70)
+                combined_report.append("COMPARING REQUEST MESSAGES")
+                combined_report.append("=" * 70)
+                combined_report.append(results['request']['report'])
+            
+            if 'response' in results:
+                combined_report.append("\n" + "=" * 70)
+                combined_report.append("COMPARING RESPONSE MESSAGES")
+                combined_report.append("=" * 70)
+                combined_report.append(results['response']['report'])
+            
+            report_text = "\n".join(combined_report)
+            
+            st.download_button(
+                label="📥 Download Full Report",
+                data=report_text,
+                file_name="comparison_report.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+        
+        else:  # Side-by-Side Diff
+            st.subheader("📊 Side-by-Side Comparison")
+            
+            # Let user choose what to compare
+            diff_target = st.selectbox(
+                "Select what to compare:",
+                ["Full File", "Request Message Only", "Response Message Only"]
+            )
+            
+            if diff_target == "Full File":
+                display_side_by_side_diff(
+                    st.session_state.file1_content,
+                    st.session_state.file2_content,
+                    st.session_state.file1_name,
+                    st.session_state.file2_name
+                )
+            elif diff_target == "Request Message Only":
+                if 'request' in st.session_state.results:
+                    display_side_by_side_diff(
+                        st.session_state.results['request']['raw_a'],
+                        st.session_state.results['request']['raw_b'],
+                        f"{st.session_state.file1_name} (Request)",
+                        f"{st.session_state.file2_name} (Request)"
+                    )
+                else:
+                    st.info("Request comparison not available")
+            elif diff_target == "Response Message Only":
+                if 'response' in st.session_state.results:
+                    display_side_by_side_diff(
+                        st.session_state.results['response']['raw_a'],
+                        st.session_state.results['response']['raw_b'],
+                        f"{st.session_state.file1_name} (Response)",
+                        f"{st.session_state.file2_name} (Response)"
+                    )
+                else:
+                    st.info("Response comparison not available")
 
 if __name__ == "__main__":
     main()

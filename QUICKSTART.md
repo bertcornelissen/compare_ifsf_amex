@@ -9,7 +9,22 @@ uv sync
 
 ## Basic Usage
 
-### Compare two files (shows Request and Response)
+### 🖥️ GUI (Recommended)
+
+Launch the interactive web interface:
+
+```bash
+uv run streamlit run compare_gui.py
+```
+
+Open `http://localhost:8501` in your browser. The GUI provides:
+
+- Drag-and-drop file upload
+- Two view modes: **Comparison Report** (structured) and **Side-by-Side Diff** (visual)
+- Interactive expandable sections
+- Downloadable reports
+
+### 💻 CLI - Compare two files (shows Request and Response)
 
 ```bash
 ./compare.sh IPH.txt WLPFO.txt
@@ -79,9 +94,10 @@ See [CONFIG_GUIDE.md](CONFIG_GUIDE.md) for detailed configuration options.
 
 ## Files
 
-- `main.py` - Main comparison tool
+- `compare_gui.py` - Streamlit GUI (recommended for interactive use)
+- `main.py` - CLI comparison tool (for automation/scripts)
 - `config.yaml` - Default configuration (customize this!)
-- `compare.sh` - Convenience wrapper script
+- `compare.sh` - Convenience wrapper script for CLI
 - `README.md` - Full documentation
 - `CONFIG_GUIDE.md` - Configuration reference
 

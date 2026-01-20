@@ -38,8 +38,11 @@ Then open your browser to `http://localhost:8501` and:
 1. Upload two ISO 8583 message files
 2. Select which messages to compare (Request, Response, or both)
 3. Click "Compare Messages"
-4. View interactive results with expandable sections
-5. Download the full text report
+4. Choose view mode:
+   - **Comparison Report**: Structured analysis with field-level differences
+   - **Side-by-Side Diff**: Visual HTML diff showing exact character changes
+5. View interactive results with expandable sections
+6. Download the full text report
 
 **GUI Features:**
 
@@ -49,6 +52,9 @@ Then open your browser to `http://localhost:8501` and:
 - 🔍 Expandable field change details with side-by-side comparison
 - 📥 Download button for full text report
 - 🔄 Hot-reload configuration without restarting
+- 📋 **Two View Modes:**
+  - **Comparison Report**: Structured field-level differences with impact analysis
+  - **Side-by-Side Diff**: Character-level HTML diff view showing exact changes
 
 ### 💻 Command-Line Interface
 
