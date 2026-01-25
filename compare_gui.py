@@ -388,57 +388,87 @@ def create_pandas_comparison(raw_msg1, raw_msg2, show_only_differences=False):
     
     except Exception as e:
         st.error(f"Error creating pandas comparison: {str(e)}")
+        st.write("Debugging Information:")
+        st.write(f"Raw Message 1: {raw_msg1}")
+        st.write(f"Raw Message 2: {raw_msg2}")
+        st.write("Decoded Message 1:")
+        try:
+            st.write(iso8583.decode(bytes.fromhex(raw_msg1.replace("\n", "").strip()), spec))
+        except Exception as decode_error:
+            st.write(f"Error decoding Message 1: {decode_error}")
+        st.write("Decoded Message 2:")
+        try:
+            st.write(iso8583.decode(bytes.fromhex(raw_msg2.replace("\n", "").strip()), spec))
+        except Exception as decode_error:
+            st.write(f"Error decoding Message 2: {decode_error}")
         return None
-
 def display_field_changes(diff):
-    """Display detailed field changes."""
-    
+    """Display detailed field changes in a compact format."""
+
     if diff.added:
         with st.expander(f"➕ Fields Added ({len(diff.added)})", expanded=True):
+            # Create a table for compact display of added fields
+            added_data = []
             for f in diff.added.values():
-                st.write(f"**{f.number}** - {f.name}")
-                if f.after and f.after.raw_value:
-                    st.code(f.after.raw_value)
-    
+                added_data.append({
+                    "Field": f.number,
+                    "Description": f.name,
+                    "Value": f.after.raw_value if f.after and f.after.raw_value else "<missing>"
+                })
+
+            # Convert to DataFrame for better display
+            if added_data:
+                df_added = pd.DataFrame(added_data)
+                st.dataframe(df_added, use_container_width=True)
+
     if diff.removed:
         with st.expander(f"➖ Fields Removed ({len(diff.removed)})", expanded=True):
+            # Create a table for compact display of removed fields
+            removed_data = []
             for f in diff.removed.values():
-                st.write(f"**{f.number}** - {f.name}")
-                if f.before and f.before.raw_value:
-                    st.code(f.before.raw_value)
-    
+                removed_data.append({
+                    "Field": f.number,
+                    "Description": f.name,
+                    "Value": f.before.raw_value if f.before and f.before.raw_value else "<missing>"
+                })
+
+            # Convert to DataFrame for better display
+            if removed_data:
+                df_removed = pd.DataFrame(removed_data)
+                st.dataframe(df_removed, use_container_width=True)
+
     if diff.changed:
         with st.expander(f"🔄 Fields Changed ({len(diff.changed)})", expanded=True):
+            # Create a table for compact display
+            changed_data = []
             for f in diff.changed.values():
-                st.write(f"**{f.number}** - {f.name}")
-                
-                # Show subfield-level changes for fields with subfields
                 if f.before and f.after and (f.before.subfields or f.after.subfields):
+                    # Subfield-level changes
                     all_subfield_keys = set(f.before.subfields.keys()) | set(f.after.subfields.keys())
-                    
                     for sk in sorted(all_subfield_keys):
                         before_val = f.before.subfields.get(sk, "<missing>")
                         after_val = f.after.subfields.get(sk, "<missing>")
                         if before_val != after_val:
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                st.text(f"{sk} - Before:")
-                                st.code(before_val)
-                            with col2:
-                                st.text(f"{sk} - After:")
-                                st.code(after_val)
+                            changed_data.append({
+                                "Field": f"{f.number}.{sk}",
+                                "Description": f"{f.name} - Subfield {sk}",
+                                "Before": before_val,
+                                "After": after_val
+                            })
                 else:
-                    # Show raw value changes for simple fields
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.text("Before:")
-                        st.code(f.before.raw_value if f.before else "<missing>")
-                    with col2:
-                        st.text("After:")
-                        st.code(f.after.raw_value if f.after else "<missing>")
-                
-                st.divider()
+                    # Simple field changes
+                    changed_data.append({
+                        "Field": f.number,
+                        "Description": f.name,
+                        "Before": f.before.raw_value if f.before else "<missing>",
+                        "After": f.after.raw_value if f.after else "<missing>"
+                    })
 
+            # Convert to DataFrame for better display
+            if changed_data:
+                df_changed = pd.DataFrame(changed_data)
+                st.dataframe(df_changed, use_container_width=True)
+    
 def main():
     st.title("🔍 ISO 8583 Message Comparator")
     st.markdown("Compare two ISO 8583 message files and analyze their differences")
@@ -564,6 +594,8 @@ def main():
                 )
                 if styled_df is not None:
                     st.markdown(styled_df.to_html(), unsafe_allow_html=True)
+                else:
+                    st.error("Failed to create a styled DataFrame for the Request Message comparison.")
             elif diff_target == "Response Message" and 'response' in st.session_state.results:
                 st.markdown("### Response Message Comparison")
                 styled_df = create_pandas_comparison(
@@ -573,6 +605,8 @@ def main():
                 )
                 if styled_df is not None:
                     st.markdown(styled_df.to_html(), unsafe_allow_html=True)
+                else:
+                    st.error("Failed to create a styled DataFrame for the Response Message comparison.")
             else:
                 st.info(f"{diff_target} comparison not available")
         
