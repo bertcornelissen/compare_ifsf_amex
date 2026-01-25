@@ -2,6 +2,8 @@ import streamlit as st
 from pathlib import Path
 import difflib
 from difflib import HtmlDiff
+import pandas as pd
+import iso8583
 
 from main import (
     load_config,
@@ -15,6 +17,7 @@ from main import (
     IGNORED_FIELD_VALUES,
     IGNORED_SUBFIELDS
 )
+from msg_specs import spec
 
 # Page config
 st.set_page_config(
@@ -211,6 +214,179 @@ def display_diff_summary(diff):
     with col3:
         st.metric("Fields Changed", len(diff.changed))
 
+def parse_sub_field(data, spec):
+    """Parse subfields from field data."""
+    # Accept str or bytes
+    if isinstance(data, str):
+        data = data.encode("ascii")
+
+    offset = 0
+    length_data = len(data)
+    result = {}
+
+    for field_nr, field in spec.items():
+        if offset >= length_data:
+            break  # no more data available
+
+        len_type = field["len_type"]
+        max_len = field["max_len"]
+        data_enc = field.get("data_enc", "ascii")
+
+        # --- fixed-length field ---
+        if len_type == 0:
+            field_len = max_len
+
+        # --- variable-length field ---
+        else:
+            # read length indicator
+            if offset + len_type > length_data:
+                break
+
+            len_bytes = data[offset:offset + len_type]
+            field_len = int(len_bytes.decode("ascii"), 16) * 2
+            offset += len_type
+
+        # read field data
+        if offset + field_len > length_data:
+            break
+
+        raw_value = data[offset:offset + field_len]
+        offset += field_len
+
+        result[field_nr] = raw_value.decode(data_enc)
+
+    return result
+
+def parse_all_subfields(doc_dec):
+    """Parse all subfields in a decoded message."""
+    for k, v in doc_dec.items():
+        ss = spec[k].get("sub_field_specs")
+        if ss is not None:
+            parsed = parse_sub_field(v, ss)
+            doc_dec[k] = parsed
+    return doc_dec
+
+def create_pandas_comparison(raw_msg1, raw_msg2):
+    """Create a pandas DataFrame comparison with highlighted differences."""
+    try:
+        # Decode both messages
+        msg_bytes1 = bytes.fromhex(raw_msg1.replace("\n", "").strip())
+        msg_bytes2 = bytes.fromhex(raw_msg2.replace("\n", "").strip())
+        
+        doc_dec1, _ = iso8583.decode(msg_bytes1, spec)
+        doc_dec2, _ = iso8583.decode(msg_bytes2, spec)
+        
+        # Parse subfields for both
+        doc_dec1 = parse_all_subfields(doc_dec1)
+        doc_dec2 = parse_all_subfields(doc_dec2)
+        
+        # Normalize to DataFrames
+        df1 = pd.json_normalize(doc_dec1)
+        df2 = pd.json_normalize(doc_dec2)
+        
+        # Sort columns
+        def safe_sort_key(col):
+            parts = col.split('.')
+            key = []
+            for p in parts:
+                if p.isdigit():
+                    key.append((0, int(p)))
+                else:
+                    key.append((1, p))
+            return tuple(key)
+        
+        all_cols_set = set(df1.columns) | set(df2.columns)
+        cols_rest = [c for c in all_cols_set if c not in ('t', 'p')]
+        all_cols = []
+        if 't' in all_cols_set:
+            all_cols.append('t')
+        if 'p' in all_cols_set:
+            all_cols.append('p')
+        all_cols += sorted(cols_rest, key=safe_sort_key)
+        
+        df1 = df1.reindex(columns=all_cols, fill_value='_______')
+        df2 = df2.reindex(columns=all_cols, fill_value='_______')
+        
+        # Build comparison DataFrame
+        rows = []
+        for col in all_cols:
+            # Check if this field/subfield should be ignored
+            should_ignore = False
+            
+            # Extract field number (without subfield) for checking
+            field_num = col.split('.')[0] if '.' in col else col
+            
+            # Check for ignored fields (entire field)
+            # Need to normalize field numbers: try both with and without leading zeros
+            if field_num in IGNORED_FIELD_VALUES:
+                should_ignore = True
+            # Try alternative formats: "12" vs "012", "4" vs "04"
+            elif field_num.isdigit():
+                # Try with leading zero
+                field_with_zero = field_num.zfill(3)  # "12" -> "012", "4" -> "004"
+                field_without_leading = field_num.lstrip('0') or '0'  # "012" -> "12", "04" -> "4"
+                if field_with_zero in IGNORED_FIELD_VALUES or field_without_leading in IGNORED_FIELD_VALUES:
+                    should_ignore = True
+            
+            # Check for ignored subfields
+            if '.' in col:
+                main_field, sub_field = col.split('.', 1)
+                # Try with and without leading zeros for field number
+                ignored_subs = IGNORED_SUBFIELDS.get(main_field, set())
+                if not ignored_subs:
+                    # Try with leading zero removed/added
+                    alt_field = main_field.lstrip('0') if main_field.startswith('0') else f"0{main_field}"
+                    ignored_subs = IGNORED_SUBFIELDS.get(alt_field, set())
+                
+                # Check if subfield name matches any ignored subfield
+                sub_specs = spec.get(main_field, {}).get('sub_field_specs', {})
+                sub_desc = sub_specs.get(sub_field, {}).get('desc', sub_field)
+                if sub_field in ignored_subs or sub_desc in ignored_subs:
+                    should_ignore = True
+            
+            val1 = str(df1.iloc[0][col])
+            val2 = str(df2.iloc[0][col])
+            
+            # Skip ignored fields/subfields only if present in both files
+            if should_ignore and val1 != '_______' and val2 != '_______':
+                continue
+            
+            if '.' in col:
+                main_field, sub_field = col.split('.', 1)
+                main_desc = spec.get(main_field, {}).get('desc', main_field)
+                sub_specs = spec.get(main_field, {}).get('sub_field_specs', {})
+                sub_desc = sub_specs.get(sub_field, {}).get('desc', sub_field)
+                field_name = main_desc + "." + sub_desc
+            else:
+                field_name = spec.get(col, {}).get('desc', col)
+            rows.append({'field': col, 'field_name': field_name, 'value1': val1, 'value2': val2})
+        
+        cmp_df = pd.DataFrame(rows)
+        
+        # Apply styling
+        def highlight_info(row):
+            val1 = row['value1']
+            val2 = row['value2']
+            green_soft = 'background-color: rgba(46,204,113,0.72)'
+            red_soft = 'background-color: rgba(231,76,60,0.72)'
+            orange_soft = 'background-color: rgba(243,156,18,0.72)'
+            
+            if val1 == '_______' and val2 != '_______':
+                return ['', '', '', green_soft]
+            elif val1 != '_______' and val2 == '_______':
+                return ['', '', red_soft, '']
+            elif val1 != val2:
+                return ['', '', orange_soft, orange_soft]
+            else:
+                return [''] * 4
+        
+        styled_cmp_df = cmp_df.style.apply(highlight_info, axis=1).hide(axis=0)
+        return styled_cmp_df
+    
+    except Exception as e:
+        st.error(f"Error creating pandas comparison: {str(e)}")
+        return None
+
 def display_field_changes(diff):
     """Display detailed field changes."""
     
@@ -343,12 +519,56 @@ def main():
         st.subheader("Choose View Mode")
         view_mode = st.radio(
             "How would you like to view the comparison?",
-            ["Comparison Report", "Side-by-Side Diff"],
+            ["Pandas DataFrame", "Comparison Report", "Side-by-Side Diff"],
             horizontal=True,
-            help="Comparison Report shows structured field differences. Side-by-Side Diff shows character-level differences in HTML format."
+            help="Pandas DataFrame shows a color-coded table. Comparison Report shows structured field differences. Side-by-Side Diff shows character-level differences in HTML format."
         )
         
-        if view_mode == "Comparison Report":
+        if view_mode == "Pandas DataFrame":
+            # Custom CSS for pandas table styling
+            st.markdown("""
+                <style>
+                section.main > div {
+                    padding-left: 1rem !important;
+                    padding-right: 1rem !important;
+                }
+                table {
+                    width: 100% !important;
+                    table-layout: auto !important;
+                }
+                th.col0, td.col0 { width: 50px !important; } /* field */
+                th.col1, td.col1 { width: 200px !important; white-space: nowrap !important; } /* field_name */
+                th.col2, td.col2 { width: 150px !important; } /* value1 */
+                th.col3, td.col3 { width: 150px !important; } /* value2 */
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Let user choose what to compare
+            diff_target = st.selectbox(
+                "Select what to compare:",
+                ["Request Message", "Response Message"]
+            )
+            
+            if diff_target == "Request Message" and 'request' in st.session_state.results:
+                st.markdown("### Request Message Comparison")
+                styled_df = create_pandas_comparison(
+                    st.session_state.results['request']['raw_a'],
+                    st.session_state.results['request']['raw_b']
+                )
+                if styled_df is not None:
+                    st.markdown(styled_df.to_html(), unsafe_allow_html=True)
+            elif diff_target == "Response Message" and 'response' in st.session_state.results:
+                st.markdown("### Response Message Comparison")
+                styled_df = create_pandas_comparison(
+                    st.session_state.results['response']['raw_a'],
+                    st.session_state.results['response']['raw_b']
+                )
+                if styled_df is not None:
+                    st.markdown(styled_df.to_html(), unsafe_allow_html=True)
+            else:
+                st.info(f"{diff_target} comparison not available")
+        
+        elif view_mode == "Comparison Report":
             # File names
             st.write(f"**File 1:** {st.session_state.file1_name}")
             st.write(f"**File 2:** {st.session_state.file2_name}")
