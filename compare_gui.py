@@ -266,7 +266,7 @@ def parse_all_subfields(doc_dec):
             doc_dec[k] = parsed
     return doc_dec
 
-def create_pandas_comparison(raw_msg1, raw_msg2):
+def create_pandas_comparison(raw_msg1, raw_msg2, show_only_differences=False):
     """Create a pandas DataFrame comparison with highlighted differences."""
     try:
         # Decode both messages
@@ -362,6 +362,9 @@ def create_pandas_comparison(raw_msg1, raw_msg2):
             rows.append({'field': col, 'field_name': field_name, 'value1': val1, 'value2': val2})
         
         cmp_df = pd.DataFrame(rows)
+        
+        if show_only_differences:
+            cmp_df = cmp_df[(cmp_df['value1'] != cmp_df['value2']) | (cmp_df['value1'] == '_______') | (cmp_df['value2'] == '_______')]
         
         # Apply styling
         def highlight_info(row):
@@ -549,11 +552,15 @@ def main():
                 ["Request Message", "Response Message"]
             )
             
+            # Option to show only differences
+            show_only_differences = st.checkbox("Show only differences", value=False)
+            
             if diff_target == "Request Message" and 'request' in st.session_state.results:
                 st.markdown("### Request Message Comparison")
                 styled_df = create_pandas_comparison(
                     st.session_state.results['request']['raw_a'],
-                    st.session_state.results['request']['raw_b']
+                    st.session_state.results['request']['raw_b'],
+                    show_only_differences
                 )
                 if styled_df is not None:
                     st.markdown(styled_df.to_html(), unsafe_allow_html=True)
@@ -561,7 +568,8 @@ def main():
                 st.markdown("### Response Message Comparison")
                 styled_df = create_pandas_comparison(
                     st.session_state.results['response']['raw_a'],
-                    st.session_state.results['response']['raw_b']
+                    st.session_state.results['response']['raw_b'],
+                    show_only_differences
                 )
                 if styled_df is not None:
                     st.markdown(styled_df.to_html(), unsafe_allow_html=True)
