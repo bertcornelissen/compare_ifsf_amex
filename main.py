@@ -253,20 +253,79 @@ def diff_fields(
 
     all_fields = set(a) | set(b)
 
-    for f in sorted(all_fields):
+    def sort_key(field_key: str) -> tuple:
+        """Sort fields and subfields numerically when possible."""
+        parts = field_key.split('.')
+        return tuple(int(part) if part.isdigit() else float('inf') if part.isdigit() == False else part for part in parts)
+
+    for f in sorted(all_fields, key=sort_key):
         fa = a.get(f)
         fb = b.get(f)
 
         if fa and not fb:
-            removed[f] = FieldDiff(f, fa.name, fa, None)
+            # Check if the field has subfields
+            if fa.subfields:
+                for subfield_key, subfield_value in sorted(fa.subfields.items(), key=lambda x: sort_key(x[0])):
+                    removed[f"{f}.{subfield_key}"] = FieldDiff(
+                        f"{f}.{subfield_key}",
+                        f"{fa.name} - Subfield {subfield_key}",
+                        ParsedField(subfield_key, f"Subfield {subfield_key}", subfield_value, {}),
+                        None
+                    )
+            else:
+                removed[f] = FieldDiff(f, fa.name, fa, None)
 
         elif fb and not fa:
-            added[f] = FieldDiff(f, fb.name, None, fb)
+            # Check if the field has subfields
+            if fb.subfields:
+                for subfield_key, subfield_value in sorted(fb.subfields.items(), key=lambda x: sort_key(x[0])):
+                    added[f"{f}.{subfield_key}"] = FieldDiff(
+                        f"{f}.{subfield_key}",
+                        f"{fb.name} - Subfield {subfield_key}",
+                        None,
+                        ParsedField(subfield_key, f"Subfield {subfield_key}", subfield_value, {})
+                    )
+            else:
+                added[f] = FieldDiff(f, fb.name, None, fb)
 
         else:
+            assert fa is not None
+            assert fb is not None
+            
             if fields_differ(fa, fb):
-                changed[f] = FieldDiff(f, fa.name, fa, fb)
-
+                # Check if subfields differ
+                if fa.subfields or fb.subfields:
+                    all_subfields = set(fa.subfields.keys()) | set(fb.subfields.keys())
+                    for subfield_key in sorted(all_subfields, key=sort_key):
+                        subfield_a = fa.subfields.get(subfield_key)
+                        subfield_b = fb.subfields.get(subfield_key)
+                        if subfield_a != subfield_b:
+                            if subfield_a is None:
+                                # Subfield introduced in file2
+                                added[f"{f}.{subfield_key}"] = FieldDiff(
+                                    f"{f}.{subfield_key}",
+                                    f"{fa.name} - Subfield {subfield_key}",
+                                    None,
+                                    ParsedField(subfield_key, f"Subfield {subfield_key}", subfield_b, {})
+                                )
+                            elif subfield_b is None:
+                                # Subfield removed in file2
+                                removed[f"{f}.{subfield_key}"] = FieldDiff(
+                                    f"{f}.{subfield_key}",
+                                    f"{fa.name} - Subfield {subfield_key}",
+                                    ParsedField(subfield_key, f"Subfield {subfield_key}", subfield_a, {}),
+                                    None
+                                )
+                            else:
+                                # Subfield changed
+                                changed[f"{f}.{subfield_key}"] = FieldDiff(
+                                    f"{f}.{subfield_key}",
+                                    f"{fa.name} - Subfield {subfield_key}",
+                                    ParsedField(subfield_key, f"Subfield {subfield_key}", subfield_a, {}),
+                                    ParsedField(subfield_key, f"Subfield {subfield_key}", subfield_b, {})
+                                )
+                else:
+                    changed[f] = FieldDiff(f, fa.name, fa, fb)
 
     return DiffResult(added, removed, changed)
 
