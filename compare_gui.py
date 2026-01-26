@@ -419,7 +419,7 @@ def display_field_changes(diff):
             # Convert to DataFrame for better display
             if added_data:
                 df_added = pd.DataFrame(added_data)
-                st.dataframe(df_added, use_container_width=True)
+                st.dataframe(df_added, width='stretch')
 
     if diff.removed:
         with st.expander(f"➖ Fields Removed ({len(diff.removed)})", expanded=True):
@@ -435,7 +435,7 @@ def display_field_changes(diff):
             # Convert to DataFrame for better display
             if removed_data:
                 df_removed = pd.DataFrame(removed_data)
-                st.dataframe(df_removed, use_container_width=True)
+                st.dataframe(df_removed, width='stretch')
 
     if diff.changed:
         with st.expander(f"🔄 Fields Changed ({len(diff.changed)})", expanded=True):
@@ -467,8 +467,35 @@ def display_field_changes(diff):
             # Convert to DataFrame for better display
             if changed_data:
                 df_changed = pd.DataFrame(changed_data)
-                st.dataframe(df_changed, use_container_width=True)
-    
+                st.dataframe(df_changed, width='stretch')
+
+def render_report(diff, verdict, message_type):
+    """Render a full text report including added fields content."""
+    report = []
+    report.append(f"=== {message_type} MESSAGE COMPARISON ===")
+    report.append(f"Verdict: {verdict}")
+
+    if diff.added:
+        report.append("\nFields Added:")
+        for f in diff.added.values():
+            value = f.after.raw_value if f.after and f.after.raw_value else "<missing>"
+            report.append(f"{f.number:<30} ({f.name:<50}): {value:20}")
+
+    if diff.removed:
+        report.append("\nFields Removed:")
+        for f in diff.removed.values():
+            value = f.before.raw_value if f.before and f.before.raw_value else "<missing>"
+            report.append(f"{f.number:<30} ({f.name:<50}): {value:20}")
+
+    if diff.changed:
+        report.append("\nFields Changed:")
+        for f in diff.changed.values():
+            before = f.before.raw_value if f.before else "<missing>"
+            after = f.after.raw_value if f.after else "<missing>"
+            report.append(f"{f.number:<30} ({f.name:<50}): Before: {before:20}, After: {after:20}")
+
+    return "\n".join(report)
+
 def main():
     st.title("🔍 ISO 8583 Message Comparator")
     st.markdown("Compare two ISO 8583 message files and analyze their differences")
@@ -509,7 +536,7 @@ def main():
         compare_response = st.checkbox("Compare Response Messages", value=True)
     
     # Compare button
-    if st.button("🔍 Compare Messages", type="primary", use_container_width=True):
+    if st.button("🔍 Compare Messages", type="primary", width='stretch'):
         if file1 is None or file2 is None:
             st.error("Please upload both files before comparing")
         else:
@@ -631,7 +658,7 @@ def main():
                 
                 # Show full text report
                 with st.expander("📄 View Full Text Report", expanded=False):
-                    st.text(results['request']['report'])
+                    st.code(results['request']['report'])
             
             # Response comparison results
             if 'response' in results:
@@ -648,7 +675,7 @@ def main():
                 
                 # Show full text report
                 with st.expander("📄 View Full Text Report", expanded=False):
-                    st.text(results['response']['report'])
+                    st.code(results['response']['report'])
             
             # Download button for combined report
             st.divider()
@@ -672,7 +699,7 @@ def main():
                 data=report_text,
                 file_name="comparison_report.txt",
                 mime="text/plain",
-                use_container_width=True
+                width='stretch'
             )
         
         else:  # Side-by-Side Diff

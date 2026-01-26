@@ -17,7 +17,7 @@ field_55_spec = {
 "01":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 16, "desc": "Application Cryptogram"},
 "02":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 2, "max_len": 99, "desc": "Issuer Application Data (IAD)"},
 "03":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 8,  "desc": "Unpredictable Number"},
-"04":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 4,  "desc": "Application Transaction Counter (ATC)"},
+"04":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 4,  "desc": "ATC"},
 "05":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 10, "desc": "Terminal Verification Results (TVR)"},
 "06":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 6,  "desc": "Transaction Date"},
 "07":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 2,  "desc": "Transaction Type"},
