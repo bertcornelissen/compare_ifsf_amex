@@ -20,9 +20,13 @@ uv run streamlit run compare_gui.py
 Open `http://localhost:8501` in your browser. The GUI provides:
 
 - Drag-and-drop file upload
-- Two view modes: **Comparison Report** (structured) and **Side-by-Side Diff** (visual)
+- Three view modes:
+  - **Pandas DataFrame**: Color-coded table view with "show only differences" option
+  - **Comparison Report**: Structured field-level differences
+  - **Side-by-Side Diff**: Character-level HTML diff
 - Interactive expandable sections
 - Downloadable reports
+- Configuration viewer in sidebar
 
 ### 💻 CLI - Compare two files (shows Request and Response)
 
@@ -61,13 +65,18 @@ Edit `config.yaml` to customize which fields and subfields are ignored:
 ```yaml
 # Completely ignore these fields
 ignored_fields:
-  - "011" # STAN
+  - "11" # STAN
+  - "41" # Card Acceptor Terminal ID
+  - "43" # Card Acceptor Name/Location
 
 # Ignore specific subfields
 ignored_subfields:
-  "022":
-    - "8-Cardmember Authentication Method"
-    - "10-Card Data Output Capability"
+  "55":
+    - "Transaction Date"
+    - "Unpredictable Number"
+    - "Application Cryptogram"
+  "12":
+    - "Day"
 ```
 
 See [CONFIG_GUIDE.md](CONFIG_GUIDE.md) for detailed configuration options.
@@ -103,21 +112,21 @@ See [CONFIG_GUIDE.md](CONFIG_GUIDE.md) for detailed configuration options.
 
 ## Common Tasks
 
-### See all Field 022 differences
+### See all Field 55 differences
 
-Temporarily edit `config.yaml` and remove or comment out the Field 022 ignored subfields:
+Temporarily edit `config.yaml` and remove or comment out the Field 55 ignored subfields:
 
 ```yaml
 ignored_subfields:
-  "022": [] # Empty list = compare all subfields
+  "55": [] # Empty list = compare all subfields
 ```
 
 ### Ignore all timestamps
 
 ```yaml
 ignored_fields:
-  - "007" # Transmission Date/Time
-  - "012" # Local Transaction Date/Time
+  - "07" # Transmission Date/Time
+  - "12" # Local Transaction Date/Time
 ```
 
 ### Compare only specific message type

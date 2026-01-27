@@ -52,9 +52,10 @@ Then open your browser to `http://localhost:8501` and:
 - 🔍 Expandable field change details with side-by-side comparison
 - 📥 Download button for full text report
 - 🔄 Hot-reload configuration without restarting
-- 📋 **Two View Modes:**
-  - **Comparison Report**: Structured field-level differences with impact analysis
-  - **Side-by-Side Diff**: Character-level HTML diff view showing exact changes
+- 📋 **Three View Modes:**
+  - **Pandas DataFrame**: Color-coded table view with "show only differences" option for focused analysis
+  - **Comparison Report**: Structured field-level differences with impact analysis and expandable sections
+  - **Side-by-Side Diff**: Character-level HTML diff view showing exact changes in full file or specific messages
 
 ### 💻 Command-Line Interface
 
@@ -104,30 +105,34 @@ The tool uses a `config.yaml` file to control which fields and subfields are ign
 # Field classification for impact assessment
 field_classes:
   FINANCIAL:
-    - "004" # Amount, Transaction
+    - "04" # Amount, Transaction
   SECURITY:
-    - "052" # PIN Data
-    - "053" # Security Related Control Information
-    - "055" # Integrated Circuit Card System Related Data
+    - "52" # PIN Data
+    - "53" # Security Related Control Information
+    - "55" # Integrated Circuit Card System Related Data
   OPERATIONAL:
-    - "007" # Date And Time, Transmission
-    - "011" # Systems Trace Audit Number
-    - "012" # Date And Time, Local Transaction
+    - "07" # Date And Time, Transmission
+    - "11" # Systems Trace Audit Number
+    - "12" # Date And Time, Local Transaction
+    - "33" # Forwarding Institution Identification Code
 
 # Fields to completely ignore (entire field value)
 ignored_fields:
-  - "011" # STAN - changes per transaction
+  - "11" # STAN - Systems Trace Audit Number (changes per transaction)
+  - "41" # Card Acceptor Terminal ID
+  - "43" # Card Acceptor Name/Location
+  - "p" # Primary Bitmap
+  - "33"
 
 # Subfields to ignore within specific fields
 ignored_subfields:
-  "007":
-    - "Time" # Ignore time component, compare only date
+  "55":
+    - "Transaction Date"
+    - "Unpredictable Number"
+    - "Application Cryptogram"
 
-  "022":
-    - "8-Cardmember Authentication Method"
-    - "9-Cardmember Authentication Entity"
-    - "10-Card Data Output Capability"
-    - "11-Terminal Output Capability"
+  "12":
+    - "Day"
 ```
 
 ### Configuration Options

@@ -44,15 +44,16 @@ Field classes categorize fields for impact assessment. This affects the VERDICT 
 ```yaml
 field_classes:
   FINANCIAL:
-    - "004" # Amount, Transaction
-    - "005" # Amount, Settlement
+    - "04" # Amount, Transaction
   SECURITY:
-    - "052" # PIN Data
-    - "055" # ICC System Related Data
+    - "52" # PIN Data
+    - "53" # Security Related Control Information
+    - "55" # Integrated Circuit Card System Related Data
   OPERATIONAL:
-    - "007" # Date And Time, Transmission
-    - "011" # STAN
-    - "033" # Forwarding Institution
+    - "07" # Date And Time, Transmission
+    - "11" # Systems Trace Audit Number
+    - "12" # Date And Time, Local Transaction
+    - "33" # Forwarding Institution Identification Code
 ```
 
 **Impact on Verdict:**
@@ -76,9 +77,11 @@ List field numbers that should be completely ignored. The entire field value wil
 
 ```yaml
 ignored_fields:
-  - "011" # STAN (System Trace Audit Number)
-  - "007" # Transmission Date/Time
-  - "012" # Local Transaction Date/Time
+  - "11" # STAN - Systems Trace Audit Number (changes per transaction)
+  - "41" # Card Acceptor Terminal ID
+  - "43" # Card Acceptor Name/Location
+  - "p" # Primary Bitmap
+  - "33" # Forwarding Institution Identification Code
 ```
 
 **Effect:** These fields will never show as different, regardless of their values.
@@ -104,30 +107,13 @@ For fields with multiple subfields, you can ignore specific subfields while comp
 
 ```yaml
 ignored_subfields:
-  "007":
-    - "Time" # Ignore time component in field 007
+  "55":
+    - "Transaction Date"
+    - "Unpredictable Number"
+    - "Application Cryptogram"
 
-  "012":
-    - "Day" # Ignore day
-    - "Time" # Ignore time in field 012
-
-  "022":
-    # Point of Service Data Code
-    - "2-Cardholder Authentication Capability"
-    - "8-Cardmember Authentication Method"
-    - "9-Cardmember Authentication Entity"
-    - "10-Card Data Output Capability"
-    - "11-Terminal Output Capability"
-
-  "043":
-    # Card Acceptor Name/Location
-    - "2-Postal Code" # Postal codes can vary in format
-    - "1-Street" # Street addresses can vary
-
-  "055":
-    # ICC System Related Data
-    - "Unpredictable Number" # Changes per transaction
-    - "Application Transaction Counter" # Counter increments
+  "12":
+    - "Day"
 ```
 
 **Effect:** Only the specified subfields are ignored; all other subfields in the field are still compared.
@@ -174,30 +160,36 @@ ignored_subfields: {}
 
 ```yaml
 field_classes:
-  FINANCIAL: ["004"]
-  SECURITY: ["052", "053", "055"]
-  OPERATIONAL: ["007", "011", "012", "033"]
+  FINANCIAL: ["04"]
+  SECURITY: ["52", "53", "55"]
+  OPERATIONAL: ["07", "11", "12", "33"]
 
 ignored_fields:
-  - "011" # STAN
+  - "11" # STAN
+  - "41" # Card Acceptor Terminal ID
+  - "43" # Card Acceptor Name/Location
+  - "p" # Primary Bitmap
+  - "33"
 
 ignored_subfields:
-  "007":
-    - "Time"
-  "012":
-    - "Time"
+  "55":
+    - "Transaction Date"
+    - "Unpredictable Number"
+    - "Application Cryptogram"
+  "12":
+    - "Day"
 ```
 
 ### Strict (ignore all timestamps and counters)
 
 ```yaml
 field_classes:
-  FINANCIAL: ["004"]
-  SECURITY: ["052", "053", "055"]
-  OPERATIONAL: ["007", "011", "012", "033"]
+  FINANCIAL: ["04"]
+  SECURITY: ["52", "53", "55"]
+  OPERATIONAL: ["07", "11", "12", "33"]
 
 ignored_fields:
-  - "007" # Transmission Date/Time
+  - "07" # Transmission Date/Time
   - "011" # STAN
   - "012" # Local Transaction Date/Time
 
