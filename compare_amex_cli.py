@@ -20,17 +20,12 @@ IGNORED_SUBFIELDS = {}
 
 def load_config(config_path: str = "config.yaml") -> bool:
     """Load configuration from YAML file."""
-    global FIELD_CLASSES, IGNORED_FIELD_VALUES, IGNORED_SUBFIELDS
+    global IGNORED_FIELD_VALUES, IGNORED_SUBFIELDS
     
     if not yaml:
         print("Warning: PyYAML not installed. Using default configuration.", file=sys.stderr)
-        print("Install with: pip install pyyaml", file=sys.stderr)
+        print("Install with: uv add pyyaml", file=sys.stderr)
         # Set defaults
-        FIELD_CLASSES = {
-            "FINANCIAL": {"004"},
-            "SECURITY": {"052", "053", "055"},
-            "OPERATIONAL": {"007", "011", "012", "033"},
-        }
         IGNORED_FIELD_VALUES = {"011"}
         IGNORED_SUBFIELDS = {
             "007": {"Time"},
@@ -49,13 +44,6 @@ def load_config(config_path: str = "config.yaml") -> bool:
     try:
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
-        
-        # Load field classes
-        if 'field_classes' in config:
-            FIELD_CLASSES = {
-                category: set(fields) 
-                for category, fields in config['field_classes'].items()
-            }
         
         # Load ignored fields
         if 'ignored_fields' in config:
@@ -333,19 +321,10 @@ def diff_fields(
 def classify(diff: DiffResult) -> str:
     changed_fields = set(diff.changed) | set(diff.added) | set(diff.removed)
 
-    if changed_fields & FIELD_CLASSES["FINANCIAL"]:
-        return "FUNCTIONALLY DIFFERENT"
+    if changed_fields:
+        return "DIFFERENCES FOUND"
 
-    if changed_fields & FIELD_CLASSES["SECURITY"]:
-        return "POTENTIALLY IMPACTFUL"
-
-    if diff.added or diff.removed:
-        return "FORMAT / ROUTING CHANGE ONLY"
-
-    if diff.changed:
-        return "OPERATIONAL DIFFERENCES ONLY"
-
-    return "NO DIFFERENCES"
+    return "NO DIFFERENCES FOUND"
 
 
 def render_report(diff: DiffResult, verdict: str, message_type: str = "") -> str:

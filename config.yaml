@@ -1,20 +1,3 @@
-# ISO 8583 Message Comparison Configuration
-# This file controls which fields and subfields are ignored during comparison
-
-# Field classification for impact assessment
-field_classes:
-  FINANCIAL:
-    - "04" # Amount, Transaction
-  SECURITY:
-    - "52" # PIN Data
-    - "53" # Security Related Control Information
-    - "55" # Integrated Circuit Card System Related Data
-  OPERATIONAL:
-    - "07" # Date And Time, Transmission
-    - "11" # Systems Trace Audit Number
-    - "12" # Date And Time, Local Transaction
-    - "33" # Forwarding Institution Identification Code
-
 # Fields to completely ignore (entire field value is ignored)
 # These fields will be marked as <IGNORED> in comparison
 ignored_fields:

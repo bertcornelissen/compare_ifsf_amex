@@ -1,11 +1,9 @@
 import streamlit as st
-from pathlib import Path
-import difflib
 from difflib import HtmlDiff
 import pandas as pd
 import iso8583
 
-from main import (
+from compare_amex_cli import (
     load_config,
     split_messages,
     parse_message,
@@ -13,7 +11,6 @@ from main import (
     diff_fields,
     classify,
     render_report,
-    FIELD_CLASSES,
     IGNORED_FIELD_VALUES,
     IGNORED_SUBFIELDS
 )
@@ -40,11 +37,6 @@ def display_config_info():
     """Display current configuration in sidebar."""
     with st.sidebar:
         st.header("⚙️ Configuration")
-        
-        with st.expander("Field Classes", expanded=False):
-            for category, fields in FIELD_CLASSES.items():
-                st.write(f"**{category}:**")
-                st.write(", ".join(sorted(fields)))
         
         with st.expander("Ignored Fields", expanded=False):
             if IGNORED_FIELD_VALUES:
@@ -111,15 +103,9 @@ def compare_files(file1_content, file2_content, compare_request=True, compare_re
 
 def display_verdict(verdict):
     """Display verdict with appropriate color coding."""
-    if verdict == "NO DIFFERENCES":
+    if verdict == "NO DIFFERENCES FOUND":
         st.success(f"✅ {verdict}")
-    elif verdict == "OPERATIONAL DIFFERENCES ONLY":
-        st.info(f"ℹ️ {verdict}")
-    elif verdict == "FORMAT / ROUTING CHANGE ONLY":
-        st.warning(f"⚠️ {verdict}")
-    elif verdict == "POTENTIALLY IMPACTFUL":
-        st.warning(f"⚠️ {verdict}")
-    elif verdict == "FUNCTIONALLY DIFFERENT":
+    elif verdict == "DIFFERENCES FOUND":
         st.error(f"❌ {verdict}")
     else:
         st.write(verdict)
@@ -387,7 +373,7 @@ def create_pandas_comparison(raw_msg1, raw_msg2, show_only_differences=False):
         return styled_cmp_df
     
     except Exception as e:
-        st.error(f"Error creating pandas comparison: {str(e)}")
+        st.error(f"Error creating table comparison: {str(e)}")
         st.write("Debugging Information:")
         st.write(f"Raw Message 1: {raw_msg1}")
         st.write(f"Raw Message 2: {raw_msg2}")
@@ -402,6 +388,7 @@ def create_pandas_comparison(raw_msg1, raw_msg2, show_only_differences=False):
         except Exception as decode_error:
             st.write(f"Error decoding Message 2: {decode_error}")
         return None
+    
 def display_field_changes(diff):
     """Display detailed field changes in a compact format."""
 
@@ -508,8 +495,9 @@ def main():
             st.sidebar.success("Configuration loaded successfully!")
     
     # Load config on first run
-    if not FIELD_CLASSES:
+    if 'config_loaded' not in st.session_state:
         load_config(config_path)
+        st.session_state.config_loaded = True
     
     display_config_info()
     
@@ -579,12 +567,12 @@ def main():
         st.subheader("Choose View Mode")
         view_mode = st.radio(
             "How would you like to view the comparison?",
-            ["Pandas DataFrame", "Comparison Report", "Side-by-Side Diff"],
+            ["Table View", "Comparison Report", "Side-by-Side Diff"],
             horizontal=True,
-            help="Pandas DataFrame shows a color-coded table. Comparison Report shows structured field differences. Side-by-Side Diff shows character-level differences in HTML format."
+            help="Table View shows a color-coded table. Comparison Report shows structured field differences. Side-by-Side Diff shows character-level differences in HTML format."
         )
         
-        if view_mode == "Pandas DataFrame":
+        if view_mode == "Table View":
             # Custom CSS for pandas table styling
             st.markdown("""
                 <style>
