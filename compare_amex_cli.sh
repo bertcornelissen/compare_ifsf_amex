@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Convenience script for running ISO 8583 message comparison cli
-# Usage: ./compare_cli.sh file1.txt file2.txt [options]
+# Convenience script for running ISO 8583 message comparison CLI
+# Usage: ./compare_amex_cli.sh file1.txt file2.txt [options]
 
+
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "$(pwd)"
 
 # Detect the operating system and activate the virtual environment
 if [[ "$(lsb_release -is 2>/dev/null)" == "Ubuntu" ]]; then

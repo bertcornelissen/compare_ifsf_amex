@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Convenience script for running ISO 8583 message comparison GUI
-# Usage: ./compare_gui.sh file1.txt file2.txt [options]
+# Usage: ./compare_amex_gui.sh 
+
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Detect the operating system and activate the virtual environment
 if [[ "$(lsb_release -is 2>/dev/null)" == "Ubuntu" ]]; then
@@ -16,4 +18,4 @@ else
     exit 1
 fi
 
-streamlit run compare_amex_gui.py "$@"s
+streamlit run compare_amex_gui.py "$@"
