@@ -8,10 +8,11 @@ A tool to compare ISO 8583 message files and identify differences at both field 
 - **Detailed Comparison**: Compares both Request and Response messages
 - **Subfield-Level Analysis**: Shows differences within complex fields (e.g., Field 22, Field 55)
 - **Configurable Ignoring**: Skip specific fields or subfields via YAML configuration
-- **Impact Classification**: Categorizes changes as FINANCIAL, SECURITY, OPERATIONAL, or FORMAT changes
 - **Flexible Output**: Print to console, save to file, or view in interactive web interface
 
 ## Installation
+
+### Local Installation
 
 ```bash
 uv sync
@@ -23,6 +24,44 @@ Or with pip:
 pip install pyyaml streamlit
 ```
 
+### Shared Directory Installation
+
+The project can be installed in a shared directory and accessed by multiple users from anywhere:
+
+1. Clone/install the project to a shared location (e.g., `/opt/compare_ifsf_amex`)
+2. Run `uv sync` to install dependencies
+3. Add the installation directory to your PATH, or create symlinks:
+
+```bash
+# Option 1: Add to PATH (add to ~/.bashrc or ~/.zshrc)
+export PATH="/path/to/compare_ifsf_amex:$PATH"
+
+# Option 2: Create symlinks in a directory already in PATH
+ln -s /path/to/compare_ifsf_amex/compare_amex_cli.sh /usr/local/bin/compare_amex_cli
+ln -s /path/to/compare_ifsf_amex/compare_amex_gui.sh /usr/local/bin/compare_amex_gui
+```
+
+4. Run from anywhere:
+
+```bash
+compare_amex_cli.sh file1.txt file2.txt
+compare_amex_gui.sh
+```
+
+## Configuration Files
+
+The tool requires two configuration files:
+
+- `config.yaml` - Defines which fields/subfields to ignore during comparison
+- `msg_specs.py` - Defines ISO 8583 message specifications
+
+**First-time setup:** When you first run the tool, if these files don't exist in the root directory, they will be automatically created by copying default templates from the `samples/` directory:
+
+- `samples/default_config.yaml` → `config.yaml`
+- `samples/default_msg_specs.py` → `msg_specs.py`
+
+**Preserving customizations:** Both `config.yaml` and `msg_specs.py` are ignored by Git, so your customizations won't be overwritten when you pull updates from the repository. The default templates in `samples/` are tracked by Git and serve as the reference configuration.
+
 ## Usage
 
 ### 🖥️ Streamlit GUI (Recommended)
@@ -30,7 +69,11 @@ pip install pyyaml streamlit
 Launch the interactive web interface:
 
 ```bash
-uv run streamlit run compare_gui.py
+# Using the wrapper script (works from anywhere)
+./compare_amex_gui.sh
+
+# Or directly with uv
+uv run streamlit run compare_amex_gui.py
 ```
 
 Then open your browser to `http://localhost:8501` and:
@@ -48,13 +91,13 @@ Then open your browser to `http://localhost:8501` and:
 
 - 📤 Drag-and-drop file upload
 - ⚙️ Configuration viewer in sidebar
-- 📊 Visual metrics and color-coded verdicts
+- 📊 Visual metrics and summary statistics
 - 🔍 Expandable field change details with side-by-side comparison
 - 📥 Download button for full text report
 - 🔄 Hot-reload configuration without restarting
 - 📋 **Three View Modes:**
   - **Pandas DataFrame**: Color-coded table view with "show only differences" option for focused analysis
-  - **Comparison Report**: Structured field-level differences with impact analysis and expandable sections
+  - **Comparison Report**: Structured field-level differences and expandable sections
   - **Side-by-Side Diff**: Character-level HTML diff view showing exact changes in full file or specific messages
 
 ### 💻 Command-Line Interface
@@ -62,60 +105,52 @@ Then open your browser to `http://localhost:8501` and:
 #### Basic Comparison
 
 ```bash
-uv run python main.py file1.txt file2.txt
+# Using wrapper script (works from anywhere)
+./compare_amex_cli.sh file1.txt file2.txt
+
+# Or directly with uv
+uv run compare_amex_cli.py file1.txt file2.txt
 ```
 
 #### Compare Only Request Messages
 
 ```bash
-uv run python main.py file1.txt file2.txt --request-only
+./compare_amex_cli.sh file1.txt file2.txt --request-only
 ```
 
 #### Compare Only Response Messages
 
 ```bash
-uv run python main.py file1.txt file2.txt --response-only
+./compare_amex_cli.sh file1.txt file2.txt --response-only
 ```
 
 #### Save Report to File
 
 ```bash
-uv run python main.py file1.txt file2.txt -o report.txt
+./compare_amex_cli.sh file1.txt file2.txt -o report.txt
 ```
 
 #### Use Custom Configuration
 
 ```bash
-uv run python main.py file1.txt file2.txt -c custom_config.yaml
+./compare_amex_cli.sh file1.txt file2.txt -c custom_config.yaml
 ```
 
 #### Verbose Output
 
 ```bash
-uv run python main.py file1.txt file2.txt --verbose
+./compare_amex_cli.sh file1.txt file2.txt --verbose
 ```
 
 ## Configuration
 
 The tool uses a `config.yaml` file to control which fields and subfields are ignored during comparison. This is useful for excluding fields that naturally vary between transactions (like timestamps or transaction IDs).
 
+**Note:** If `config.yaml` doesn't exist when you run the tool, it will be automatically created from `samples/default_config.yaml`. Your customized `config.yaml` is ignored by Git, so your changes won't be lost when pulling updates.
+
 ### Configuration File Format
 
 ```yaml
-# Field classification for impact assessment
-field_classes:
-  FINANCIAL:
-    - "04" # Amount, Transaction
-  SECURITY:
-    - "52" # PIN Data
-    - "53" # Security Related Control Information
-    - "55" # Integrated Circuit Card System Related Data
-  OPERATIONAL:
-    - "07" # Date And Time, Transmission
-    - "11" # Systems Trace Audit Number
-    - "12" # Date And Time, Local Transaction
-    - "33" # Forwarding Institution Identification Code
-
 # Fields to completely ignore (entire field value)
 ignored_fields:
   - "11" # STAN - Systems Trace Audit Number (changes per transaction)
@@ -136,14 +171,6 @@ ignored_subfields:
 ```
 
 ### Configuration Options
-
-#### field_classes
-
-Groups fields into categories for impact assessment:
-
-- **FINANCIAL**: Changes that affect transaction amounts or financial processing
-- **SECURITY**: Changes that affect security-related fields
-- **OPERATIONAL**: Changes that affect routing or operational behavior
 
 #### ignored_fields
 
@@ -168,8 +195,6 @@ The tool generates a detailed comparison report showing:
 ISO 8583 Message Comparison Report - REQUEST
 ==================================================
 
-VERDICT: POTENTIALLY IMPACTFUL
-
 Summary
 -------
 Fields added   : 4
@@ -192,8 +217,8 @@ Fields Changed
 ## CLI Options
 
 ```
-usage: main.py [-h] [-c CONFIG] [-o OUTPUT] [--request-only]
-               [--response-only] [--verbose] file1 file2
+usage: compare_amex_cli.py [-h] [-c CONFIG] [-o OUTPUT] [--request-only]
+                           [--response-only] [--verbose] file1 file2
 
 positional arguments:
   file1                First ISO 8583 message file to compare
@@ -213,8 +238,11 @@ options:
 ### GUI Usage
 
 ```bash
-# Launch the Streamlit GUI
-uv run streamlit run compare_gui.py
+# Launch the Streamlit GUI (wrapper script)
+./compare_amex_gui.sh
+
+# Or directly with uv
+uv run streamlit run compare_amex_gui.py
 
 # Then open http://localhost:8501 in your browser
 ```
@@ -224,19 +252,23 @@ uv run streamlit run compare_gui.py
 Compare two message files with default configuration:
 
 ```bash
-uv run python main.py IPH.txt WLPFO.txt
+# Using wrapper script
+./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt
+
+# Or directly with uv
+uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt
 ```
 
 Compare only request messages and save to file:
 
 ```bash
-uv run python main.py IPH.txt WLPFO.txt --request-only -o diff_report.txt
+./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt --request-only -o diff_report.txt
 ```
 
 Use a custom configuration file:
 
 ```bash
-uv run python main.py msg1.txt msg2.txt -c production_config.yaml
+./compare_amex_cli.sh msg1.txt msg2.txt -c production_config.yaml
 ```
 
 ## Exit Codes

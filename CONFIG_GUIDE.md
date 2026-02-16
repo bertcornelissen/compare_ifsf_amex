@@ -6,21 +6,23 @@ This guide explains how to customize the comparison behavior using the `config.y
 
 The tool looks for `config.yaml` in the current directory by default.
 
+**First Run:** If `config.yaml` doesn't exist, it will be automatically created from `samples/default_config.yaml`. Your customized `config.yaml` is ignored by Git, so your changes are preserved when pulling updates.
+
 **In the Streamlit GUI:** Enter the config file path in the sidebar.
 
 **In the CLI:** Use the `-c` option:
 
 ```bash
-uv run python main.py file1.txt file2.txt -c my_config.yaml
+# Using wrapper script
+./compare_amex_cli.sh file1.txt file2.txt -c my_config.yaml
+
+# Or directly with uv
+uv run compare_amex_cli.py file1.txt file2.txt -c my_config.yaml
 ```
 
 ## Configuration Structure
 
 ```yaml
-field_classes:
-  CATEGORY_NAME:
-    - "field_number"
-
 ignored_fields:
   - "field_number"
 
@@ -28,41 +30,6 @@ ignored_subfields:
   "field_number":
     - "subfield_identifier"
 ```
-
-## Field Classes
-
-Field classes categorize fields for impact assessment. This affects the VERDICT output.
-
-**Supported categories:**
-
-- `FINANCIAL`: Changes that affect transaction amounts or financial processing
-- `SECURITY`: Changes that affect security-related fields (e.g., PIN, cryptograms)
-- `OPERATIONAL`: Changes that affect routing or operational behavior
-
-**Example:**
-
-```yaml
-field_classes:
-  FINANCIAL:
-    - "04" # Amount, Transaction
-  SECURITY:
-    - "52" # PIN Data
-    - "53" # Security Related Control Information
-    - "55" # Integrated Circuit Card System Related Data
-  OPERATIONAL:
-    - "07" # Date And Time, Transmission
-    - "11" # Systems Trace Audit Number
-    - "12" # Date And Time, Local Transaction
-    - "33" # Forwarding Institution Identification Code
-```
-
-**Impact on Verdict:**
-
-- Changes to FINANCIAL fields → "FUNCTIONALLY DIFFERENT"
-- Changes to SECURITY fields → "POTENTIALLY IMPACTFUL"
-- Only FORMAT changes (add/remove fields) → "FORMAT / ROUTING CHANGE ONLY"
-- Only OPERATIONAL changes → "OPERATIONAL DIFFERENCES ONLY"
-- No changes → "NO DIFFERENCES"
 
 ## Ignored Fields
 
@@ -125,7 +92,7 @@ To find the correct subfield identifiers for the `ignored_subfields` configurati
 1. Run a comparison **without** ignoring any subfields:
 
    ```bash
-   uv run python main.py file1.txt file2.txt > full_report.txt
+   ./compare_amex_cli.sh file1.txt file2.txt > full_report.txt
    ```
 
 2. Look at the changed fields in the output to see the exact subfield names:
@@ -147,11 +114,6 @@ To find the correct subfield identifiers for the `ignored_subfields` configurati
 ### Minimal (compare everything)
 
 ```yaml
-field_classes:
-  FINANCIAL: ["004"]
-  SECURITY: ["052", "055"]
-  OPERATIONAL: ["011"]
-
 ignored_fields: []
 ignored_subfields: {}
 ```
@@ -159,11 +121,6 @@ ignored_subfields: {}
 ### Standard (ignore transaction-specific fields)
 
 ```yaml
-field_classes:
-  FINANCIAL: ["04"]
-  SECURITY: ["52", "53", "55"]
-  OPERATIONAL: ["07", "11", "12", "33"]
-
 ignored_fields:
   - "11" # STAN
   - "41" # Card Acceptor Terminal ID
@@ -183,11 +140,6 @@ ignored_subfields:
 ### Strict (ignore all timestamps and counters)
 
 ```yaml
-field_classes:
-  FINANCIAL: ["04"]
-  SECURITY: ["52", "53", "55"]
-  OPERATIONAL: ["07", "11", "12", "33"]
-
 ignored_fields:
   - "07" # Transmission Date/Time
   - "011" # STAN

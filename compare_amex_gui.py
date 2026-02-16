@@ -12,9 +12,9 @@ from compare_amex_cli import (
     classify,
     render_report,
     IGNORED_FIELD_VALUES,
-    IGNORED_SUBFIELDS
+    IGNORED_SUBFIELDS,
+    spec
 )
-from msg_specs import spec
 
 # Page config
 st.set_page_config(
