@@ -7,10 +7,6 @@
 
 cd /d "%~dp0"
 
-.venv\Scripts\activate
-
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-source .venv/bin/activate
+.venv/bin/activate
 
 streamlit run compare_amex_gui.py "$@"
