@@ -43,8 +43,7 @@ IF NOT EXIST "%VENV_DIR%\Scripts\activate.bat" (
     SET PIP_DISABLE_PIP_VERSION_CHECK=1
     python -m pip install --upgrade pip >nul
     python -m pip install -r "%APP_DIR%\requirements.txt" --quiet
-)
-ELSE (
+) ELSE (
     ECHO ---- Activate existing venv ----
     call "%VENV_DIR%\Scripts\activate.bat"
 )
