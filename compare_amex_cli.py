@@ -544,7 +544,7 @@ Examples:
     
     # Output results
     output_text = "\n".join(output_lines)
-    
+
     if args.output:
         try:
             Path(args.output).write_text(output_text)
