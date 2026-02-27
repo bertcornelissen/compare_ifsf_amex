@@ -57,21 +57,7 @@ IGNORED_SUBFIELDS = {}
 def load_config(config_path: str = "config.yaml") -> bool:
     """Load configuration from YAML file."""
     global IGNORED_FIELD_VALUES, IGNORED_SUBFIELDS
-    
-    if not yaml:
-        print("Warning: PyYAML not installed. Using default configuration.", file=sys.stderr)
-        print("Install with: uv add pyyaml", file=sys.stderr)
-        # Set defaults
-        IGNORED_FIELD_VALUES = {"011"}
-        IGNORED_SUBFIELDS = {
-            "007": {"Time"},
-            "012": {"Day", "Time"},
-            "022": {"8-Cardmember Authentication Method", "9-Cardmember Authentication Entity", 
-                    "10-Card Data Output Capability", "11-Terminal Output Capability"},
-            "043": {"2-Postal Code"}
-        }
-        return False
-    
+       
     config_file = Path(config_path)
     if not config_file.exists():
         print(f"Warning: Config file '{config_path}' not found. Using default configuration.", file=sys.stderr)

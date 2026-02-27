@@ -17,12 +17,12 @@ SET PYTHONUTF8=1
 
 REM ---- Ensure config files exist ----
 IF NOT EXIST "%APP_DIR%\config.yaml" (
-    echo Copying default.config.yaml to config.yaml...
-    copy "%APP_DIR%\default.config.yaml" "%APP_DIR%\config.yaml"
+    echo Copying default_config.yaml to config.yaml...
+    copy "%APP_DIR%\samples\default_config.yaml" "%APP_DIR%\config.yaml"
 )
 IF NOT EXIST "%APP_DIR%\msg_specs.py" (
     echo Copying default_msg_specs.py to msg_specs.py...
-    copy "%APP_DIR%\default_msg_specs.py" "%APP_DIR%\msg_specs.py"
+    copy "%APP_DIR%\samples\default_msg_specs.py" "%APP_DIR%\msg_specs.py"
 )
 
 REM ---- Check Python ----
@@ -52,6 +52,7 @@ REM ---- Launch app ----
 REM ---- Command-line mode ----
 IF /I "%1"=="gui" (
     echo Starting Compare ISO8583 Amex GUI...
+    cd /d "%APP_DIR%"
     streamlit run "%APP_DIR%\%APP_FILE%" --server.headless=true
     pause
     exit /b
@@ -59,7 +60,8 @@ IF /I "%1"=="gui" (
 
 IF /I "%1"=="cli" IF NOT "%2"=="" IF NOT "%3"=="" (
     echo Running Compare ISO8583 Amex CLI with command-line parameters...
-    python "%APP_DIR%\compare_amex_cli.py" "%2" "%3%"
+    cd /d "%APP_DIR%"
+    python "%APP_DIR%\compare_amex_cli.py" "%2" "%3%" -c "%APP_DIR%\config.yaml"
     pause
     exit /b
 )
@@ -73,6 +75,7 @@ set /p MODE=Enter 1 or 2:
 
 if "%MODE%"=="1" (
     echo Starting Compare ISO8583 Amex GUI...
+    cd /d "%APP_DIR%"
     streamlit run "%APP_DIR%\%APP_FILE%" --server.headless=true
     pause
     exit /b
@@ -82,7 +85,8 @@ if "%MODE%"=="2" (
     set /p PARAM1=Enter first parameter:
     set /p PARAM2=Enter second parameter:
     echo Running Compare ISO8583 Amex CLI...
-    python "%APP_DIR%\compare_amex_cli.py" "%PARAM1%" "%PARAM2%"
+    cd /d "%APP_DIR%"
+    python "%APP_DIR%\compare_amex_cli.py" "%PARAM1%" "%PARAM2%" -c "%APP_DIR%\config.yaml"
     pause
     exit /b
 )
