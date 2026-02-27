@@ -6,7 +6,6 @@
 
 ```bash
 cd /path/to/compare_ifsf_amex
-uv sync
 ```
 
 ### Shared Directory Installation
@@ -16,7 +15,6 @@ For multi-user environments, install to a shared location:
 ```bash
 # Install to shared directory
 cd /opt/compare_ifsf_amex  # or any shared location
-uv sync
 
 # Add to PATH or create symlinks
 export PATH="/opt/compare_ifsf_amex:$PATH"
@@ -39,14 +37,14 @@ These files are ignored by Git, so your customizations won't be lost when pullin
 
 ### 🖥️ GUI (Recommended)
 
-Launch the interactive web interface:
+**Windows:**
 
-```bash
-# Using wrapper script (recommended, works from anywhere)
-./compare_amex_gui.sh
+```bat
+# One-click launcher
+amex.bat gui
 
-# Or directly with uv (must be in project directory)
-uv run streamlit run compare_amex_gui.py
+# Or interactive menu (run without arguments and choose option 1)
+amex.bat
 ```
 
 Open `http://localhost:8501` in your browser. The GUI provides:
@@ -69,6 +67,22 @@ Open `http://localhost:8501` in your browser. The GUI provides:
 # Or directly with uv (must be in project directory)
 uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt
 ```
+
+**Windows:**
+
+```bat
+# One-click launcher
+amex.bat cli samples\IPH.txt samples\WLPFO.txt
+
+# Or interactive menu (run without arguments and choose option 2)
+amex.bat
+```
+
+> **Note (Windows):** `amex.bat cli` accepts two file arguments. For advanced options (`--request-only`, `-o`, `-c`, etc.), invoke Python directly:
+>
+> ```bat
+> python compare_amex_cli.py samples\IPH.txt samples\WLPFO.txt --request-only
+> ```
 
 ### Compare only Request messages
 
@@ -119,10 +133,20 @@ See [CONFIG_GUIDE.md](CONFIG_GUIDE.md) for detailed configuration options.
 ./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt --request-only
 ```
 
+```bat
+:: Windows — basic two-file comparison (no extra options via amex.bat)
+amex.bat cli samples\IPH.txt samples\WLPFO.txt
+```
+
 **Example 2: Custom config**
 
 ```bash
 ./compare_amex_cli.sh file1.txt file2.txt -c production.yaml
+```
+
+```bat
+:: Windows — use Python directly for extra options
+python compare_amex_cli.py file1.txt file2.txt -c production.yaml
 ```
 
 **Example 3: Verbose output to file**
@@ -131,12 +155,18 @@ See [CONFIG_GUIDE.md](CONFIG_GUIDE.md) for detailed configuration options.
 ./compare_amex_cli.sh msg1.txt msg2.txt --verbose -o detailed_report.txt
 ```
 
+```bat
+:: Windows — use Python directly for extra options
+python compare_amex_cli.py msg1.txt msg2.txt --verbose -o detailed_report.txt
+```
+
 ## Files
 
 - `compare_amex_gui.py` - Streamlit GUI (recommended for interactive use)
 - `compare_amex_cli.py` - CLI comparison tool (for automation/scripts)
 - `compare_amex_gui.sh` - Wrapper script for GUI (works from anywhere)
 - `compare_amex_cli.sh` - Wrapper script for CLI (works from anywhere)
+- `amex.bat` - Windows one-click launcher (`amex.bat gui`, `amex.bat cli file1 file2`, or `amex.bat` for interactive menu)
 - `config.yaml` - User configuration (auto-created from samples/, customize this!)
 - `msg_specs.py` - Message specifications (auto-created from samples/)
 - `samples/` - Default templates for configuration and message specs

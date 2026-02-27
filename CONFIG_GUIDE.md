@@ -20,6 +20,16 @@ The tool looks for `config.yaml` in the current directory by default.
 uv run compare_amex_cli.py file1.txt file2.txt -c my_config.yaml
 ```
 
+**Windows:**
+
+```bat
+:: amex.bat does not support the -c option; invoke Python directly
+python compare_amex_cli.py file1.txt file2.txt -c my_config.yaml
+
+:: Basic two-file comparison (uses default config.yaml)
+amex.bat cli file1.txt file2.txt
+```
+
 ## Configuration Structure
 
 ```yaml
@@ -93,6 +103,11 @@ To find the correct subfield identifiers for the `ignored_subfields` configurati
 
    ```bash
    ./compare_amex_cli.sh file1.txt file2.txt > full_report.txt
+   ```
+
+   ```bat
+   :: Windows
+   amex.bat cli file1.txt file2.txt > full_report.txt
    ```
 
 2. Look at the changed fields in the output to see the exact subfield names:

@@ -76,6 +76,16 @@ Launch the interactive web interface:
 uv run streamlit run compare_amex_gui.py
 ```
 
+**Windows:**
+
+```bat
+:: One-click Windows launcher
+amex.bat gui
+
+:: Or run without arguments and choose option 1 from the interactive menu
+amex.bat
+```
+
 Then open your browser to `http://localhost:8501` and:
 
 1. Upload two ISO 8583 message files
@@ -111,6 +121,22 @@ Then open your browser to `http://localhost:8501` and:
 # Or directly with uv
 uv run compare_amex_cli.py file1.txt file2.txt
 ```
+
+**Windows:**
+
+```bat
+:: One-click Windows launcher (two file arguments)
+amex.bat cli file1.txt file2.txt
+
+:: Or run without arguments and choose option 2 from the interactive menu
+amex.bat
+```
+
+> **Note (Windows):** For advanced options (`--request-only`, `--response-only`, `-o`, `-c`, `--verbose`), invoke Python directly:
+>
+> ```bat
+> python compare_amex_cli.py file1.txt file2.txt --request-only
+> ```
 
 #### Compare Only Request Messages
 
@@ -247,6 +273,12 @@ uv run streamlit run compare_amex_gui.py
 # Then open http://localhost:8501 in your browser
 ```
 
+**Windows:**
+
+```bat
+amex.bat gui
+```
+
 ### CLI Usage
 
 Compare two message files with default configuration:
@@ -259,16 +291,32 @@ Compare two message files with default configuration:
 uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt
 ```
 
+**Windows:**
+
+```bat
+amex.bat cli samples\IPH.txt samples\WLPFO.txt
+```
+
 Compare only request messages and save to file:
 
 ```bash
 ./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt --request-only -o diff_report.txt
 ```
 
+```bat
+:: Windows — use Python directly for extra options
+python compare_amex_cli.py samples\IPH.txt samples\WLPFO.txt --request-only -o diff_report.txt
+```
+
 Use a custom configuration file:
 
 ```bash
 ./compare_amex_cli.sh msg1.txt msg2.txt -c production_config.yaml
+```
+
+```bat
+:: Windows — use Python directly for extra options
+python compare_amex_cli.py msg1.txt msg2.txt -c production_config.yaml
 ```
 
 ## Exit Codes
