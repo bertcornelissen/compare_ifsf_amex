@@ -508,11 +508,19 @@ def main():
     
     with col1:
         st.subheader("File 1")
-        file1 = st.file_uploader("Upload first ISO 8583 message file", type=['txt'], key="file1")
-        
+        tab_upload1, tab_paste1 = st.tabs(["📂 Upload File", "📋 Paste Content"])
+        with tab_upload1:
+            file1 = st.file_uploader("Upload first ISO 8583 message file", type=['txt'], key="file1")
+        with tab_paste1:
+            pasted1 = st.text_area("Paste file 1 content here", height=200, key="paste1")
+
     with col2:
         st.subheader("File 2")
-        file2 = st.file_uploader("Upload second ISO 8583 message file", type=['txt'], key="file2")
+        tab_upload2, tab_paste2 = st.tabs(["📂 Upload File", "📋 Paste Content"])
+        with tab_upload2:
+            file2 = st.file_uploader("Upload second ISO 8583 message file", type=['txt'], key="file2")
+        with tab_paste2:
+            pasted2 = st.text_area("Paste file 2 content here", height=200, key="paste2")
     
     # Comparison options
     st.subheader("Comparison Options")
@@ -525,15 +533,31 @@ def main():
     
     # Compare button
     if st.button("🔍 Compare Messages", type="primary", width='stretch'):
-        if file1 is None or file2 is None:
-            st.error("Please upload both files before comparing")
+        # Resolve content from upload or paste for each file
+        file1_content = None
+        file1_name = None
+        file2_content = None
+        file2_name = None
+
+        if file1 is not None:
+            file1_content = file1.read().decode('utf-8')
+            file1_name = file1.name
+        elif pasted1 and pasted1.strip():
+            file1_content = pasted1
+            file1_name = "pasted_file_1.txt"
+
+        if file2 is not None:
+            file2_content = file2.read().decode('utf-8')
+            file2_name = file2.name
+        elif pasted2 and pasted2.strip():
+            file2_content = pasted2
+            file2_name = "pasted_file_2.txt"
+
+        if file1_content is None or file2_content is None:
+            st.error("Please upload or paste content for both files before comparing")
         else:
             with st.spinner("Comparing messages..."):
                 try:
-                    # Read file contents
-                    file1_content = file1.read().decode('utf-8')
-                    file2_content = file2.read().decode('utf-8')
-                    
                     # Store file contents for diff view
                     st.session_state.file1_content = file1_content
                     st.session_state.file2_content = file2_content
@@ -549,8 +573,8 @@ def main():
                     # Store results in session state
                     st.session_state.results = results
                     st.session_state.comparison_done = True
-                    st.session_state.file1_name = file1.name
-                    st.session_state.file2_name = file2.name
+                    st.session_state.file1_name = file1_name
+                    st.session_state.file2_name = file2_name
                     
                     st.success("Comparison completed!")
                     
