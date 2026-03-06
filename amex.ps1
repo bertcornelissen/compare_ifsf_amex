@@ -18,10 +18,6 @@ if (-not (Test-Path "$APP_DIR\config.yaml")) {
     Write-Host "Copying default_config.yaml to config.yaml..."
     Copy-Item "$APP_DIR\samples\default_config.yaml" "$APP_DIR\config.yaml"
 }
-if (-not (Test-Path "$APP_DIR\msg_specs.py")) {
-    Write-Host "Copying default_msg_specs.py to msg_specs.py..."
-    Copy-Item "$APP_DIR\samples\default_msg_specs.py" "$APP_DIR\msg_specs.py"
-}
 
 # ---- Check Python ----
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {

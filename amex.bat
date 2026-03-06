@@ -15,14 +15,10 @@ REM Environment hardening
 SET PYTHONDONTWRITEBYTECODE=1
 SET PYTHONUTF8=1
 
-REM ---- Ensure config files exist ----
+REM ---- Ensure config file exist ----
 IF NOT EXIST "%APP_DIR%\config.yaml" (
     echo Copying default_config.yaml to config.yaml...
     copy "%APP_DIR%\samples\default_config.yaml" "%APP_DIR%\config.yaml"
-)
-IF NOT EXIST "%APP_DIR%\msg_specs.py" (
-    echo Copying default_msg_specs.py to msg_specs.py...
-    copy "%APP_DIR%\samples\default_msg_specs.py" "%APP_DIR%\msg_specs.py"
 )
 
 REM ---- Check Python ----
