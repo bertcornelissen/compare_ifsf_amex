@@ -12,38 +12,6 @@ except ImportError:
 import iso8583
 
 
-def ensure_config_files():
-    """
-    Ensure config.yaml and msg_specs.py exist in the root directory.
-    If not found, copy them from samples/ directory.
-    This allows users to customize these files without losing changes when pulling from git.
-    """
-    root_dir = Path(__file__).parent
-    samples_dir = root_dir / "samples"
-    
-    files_to_check = [
-        ("ignored_fields.yaml"),
-        ("msg_specs.py")
-    ]
-    
-    for root_file, sample_file in files_to_check:
-        root_path = root_dir / root_file
-        sample_path = samples_dir / sample_file
-        
-        if not root_path.exists():
-            if sample_path.exists():
-                try:
-                    shutil.copy2(sample_path, root_path)
-                    print(f"Created {root_file} from samples/{sample_file}", file=sys.stderr)
-                except Exception as e:
-                    print(f"Warning: Could not copy {sample_file} to {root_file}: {e}", file=sys.stderr)
-            else:
-                print(f"Warning: {root_file} not found and samples/{sample_file} does not exist", file=sys.stderr)
-
-
-# Ensure config files exist before importing msg_specs
-ensure_config_files()
-
 # Import message specifications
 from msg_specs import spec, field_55_spec
 
