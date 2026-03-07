@@ -22,8 +22,8 @@ def ensure_config_files():
     samples_dir = root_dir / "samples"
     
     files_to_check = [
-        ("config.yaml", "default_config.yaml"),
-        ("msg_specs.py", "default_msg_specs.py")
+        ("ignored_fields.yaml"),
+        ("msg_specs.py")
     ]
     
     for root_file, sample_file in files_to_check:
