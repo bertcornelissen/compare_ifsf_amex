@@ -494,16 +494,17 @@ def main():
     st.markdown("Compare two ISO 8583 message files and analyze their differences")
     
     # Load configuration
-    config_path = st.sidebar.text_input("Config File", value="config.yaml")
+    config_path = st.sidebar.text_input("Config File", value="ignored_fields.yaml")
     if st.sidebar.button("Reload Configuration"):
         with st.spinner("Loading configuration..."):
             load_config(config_path)
             st.sidebar.success("Configuration loaded successfully!")
     
-    # Load config on first run
-    if 'config_loaded' not in st.session_state:
+    # Load config on first run or when the config path changes
+    if 'config_loaded' not in st.session_state or st.session_state.get('last_config_path') != config_path:
         load_config(config_path)
         st.session_state.config_loaded = True
+        st.session_state.last_config_path = config_path
     
     display_config_info()
     

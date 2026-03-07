@@ -5,7 +5,8 @@ REM One-click Streamlit Launcher (Latest)
 REM Local venv, shared app, self-healing
 REM ==========================================
 
-SET APP_DIR=C:\Users\bcorn\PythonProjects\compare_ifsf_amex
+REM --- %~dp0 is the directory where this batch file is located ---
+SET APP_DIR=%~dp0
 SET APP_FILE=compare_amex_gui.py
 
 REM Local venv per user
