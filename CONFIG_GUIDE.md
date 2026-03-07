@@ -1,22 +1,18 @@
 # Configuration Guide for ISO 8583 Message Comparison
 
-This guide explains how to customize the comparison behavior using the `config.yaml` file.
+This guide explains how to customize the comparison behavior using the `ignored_fields.yaml` file.
 
 ## Quick Start
 
-The tool looks for `config.yaml` in the current directory by default.
+Copy `samples/ignored_fields.yaml` to `ignored_fields.yaml` in the project root. Pass a custom config path with `-c`.
 
-**First Run:** If `config.yaml` doesn't exist, it will be automatically created from `samples/default_config.yaml`. Your customized `config.yaml` is ignored by Git, so your changes are preserved when pulling updates.
+**First Run:** If `ignored_fields.yaml` doesn't exist in the project root, copy it from `samples/ignored_fields.yaml`. Your customized `ignored_fields.yaml` is ignored by Git, so your changes are preserved when pulling updates.
 
 **In the Streamlit GUI:** Enter the config file path in the sidebar.
 
 **In the CLI:** Use the `-c` option:
 
 ```bash
-# Using wrapper script
-./compare_amex_cli.sh file1.txt file2.txt -c my_config.yaml
-
-# Or directly with uv
 uv run compare_amex_cli.py file1.txt file2.txt -c my_config.yaml
 ```
 
@@ -102,7 +98,7 @@ To find the correct subfield identifiers for the `ignored_subfields` configurati
 1. Run a comparison **without** ignoring any subfields:
 
    ```bash
-   ./compare_amex_cli.sh file1.txt file2.txt > full_report.txt
+   uv run compare_amex_cli.py file1.txt file2.txt > full_report.txt
    ```
 
    ```bat
@@ -184,7 +180,7 @@ ignored_subfields:
 Warning: Config file 'config.yaml' not found. Using default configuration.
 ```
 
-Solution: Create a `config.yaml` file or specify the correct path with `-c`
+Solution: Copy `samples/ignored_fields.yaml` to `ignored_fields.yaml` and use `-c ignored_fields.yaml`, or specify the correct config path with `-c`
 
 **Field still showing as different:**
 

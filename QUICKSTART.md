@@ -4,34 +4,22 @@
 
 ### Local Installation
 
-```bash
-cd /path/to/compare_ifsf_amex
-```
+Clone the GIT repo and (on Windows) start the amex.bat file.
 
-### Shared Directory Installation
-
-For multi-user environments, install to a shared location:
-
-```bash
-# Install to shared directory
-cd /opt/compare_ifsf_amex  # or any shared location
-
-# Add to PATH or create symlinks
-export PATH="/opt/compare_ifsf_amex:$PATH"
-
-# Now anyone can run from anywhere:
-compare_amex_cli.sh file1.txt file2.txt
-compare_amex_gui.sh
-```
+- This will create a virtual environment, when not present
+- Provides a default ignored_fields.yaml, when not present
 
 ## Configuration Files
 
-**First-time setup:** When you first run the tool, if `config.yaml` and `msg_specs.py` don't exist, they will be automatically created from the templates in `samples/`:
+**First-time setup:** Copy the sample configuration to the project root before running:
 
-- `samples/default_config.yaml` → `config.yaml`
-- `samples/default_msg_specs.py` → `msg_specs.py`
+```bash
+cp samples/ignored_fields.yaml ignored_fields.yaml
+```
 
-These files are ignored by Git, so your customizations won't be lost when pulling updates.
+**Windows:** `amex.bat` automatically copies `samples\ignored_fields.yaml` → `ignored_fields.yaml` on first run.
+
+`ignored_fields.yaml` is ignored by Git, so your customizations won't be lost when pulling updates.
 
 ## Basic Usage
 
@@ -61,11 +49,7 @@ Open `http://localhost:8501` in your browser. The GUI provides:
 ### 💻 CLI - Compare two files (shows Request and Response)
 
 ```bash
-# Using wrapper script (recommended, works from anywhere)
-./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt
-
-# Or directly with uv (must be in project directory)
-uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt
+uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt -c ignored_fields.yaml
 ```
 
 **Windows:**
@@ -87,24 +71,24 @@ amex.bat
 ### Compare only Request messages
 
 ```bash
-./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt --request-only
+uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt --request-only -c ignored_fields.yaml
 ```
 
 ### Save report to file
 
 ```bash
-./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt -o report.txt
+uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt -c ignored_fields.yaml -o report.txt
 ```
 
 ### Get help
 
 ```bash
-./compare_amex_cli.sh --help
+uv run compare_amex_cli.py --help
 ```
 
 ## Configuration
 
-Edit `config.yaml` to customize which fields and subfields are ignored:
+Edit `ignored_fields.yaml` to customize which fields and subfields are ignored:
 
 ```yaml
 # Completely ignore these fields
@@ -130,7 +114,7 @@ See [CONFIG_GUIDE.md](CONFIG_GUIDE.md) for detailed configuration options.
 **Example 1: Quick comparison**
 
 ```bash
-./compare_amex_cli.sh samples/IPH.txt samples/WLPFO.txt --request-only
+uv run compare_amex_cli.py samples/IPH.txt samples/WLPFO.txt --request-only -c ignored_fields.yaml
 ```
 
 ```bat
@@ -141,7 +125,7 @@ amex.bat cli samples\IPH.txt samples\WLPFO.txt
 **Example 2: Custom config**
 
 ```bash
-./compare_amex_cli.sh file1.txt file2.txt -c production.yaml
+uv run compare_amex_cli.py file1.txt file2.txt -c production.yaml
 ```
 
 ```bat
@@ -152,26 +136,23 @@ python compare_amex_cli.py file1.txt file2.txt -c production.yaml
 **Example 3: Verbose output to file**
 
 ```bash
-./compare_amex_cli.sh msg1.txt msg2.txt --verbose -o detailed_report.txt
+uv run compare_amex_cli.py msg1.txt msg2.txt --verbose -c ignored_fields.yaml -o detailed_report.txt
 ```
 
 ```bat
 :: Windows — use Python directly for extra options
-python compare_amex_cli.py msg1.txt msg2.txt --verbose -o detailed_report.txt
+python compare_amex_cli.py msg1.txt msg2.txt --verbose -c ignored_fields.yaml -o detailed_report.txt
 ```
 
 ## Files
 
 - `compare_amex_gui.py` - Streamlit GUI (recommended for interactive use)
 - `compare_amex_cli.py` - CLI comparison tool (for automation/scripts)
-- `compare_amex_gui.sh` - Wrapper script for GUI (works from anywhere)
-- `compare_amex_cli.sh` - Wrapper script for CLI (works from anywhere)
 - `amex.bat` - Windows one-click launcher (`amex.bat gui`, `amex.bat cli file1 file2`, or `amex.bat` for interactive menu)
-- `config.yaml` - User configuration (auto-created from samples/, customize this!)
-- `msg_specs.py` - Message specifications (auto-created from samples/)
-- `samples/` - Default templates for configuration and message specs
-  - `default_config.yaml` - Default configuration template
-  - `default_msg_specs.py` - Default message specification template
+- `ignored_fields.yaml` - User configuration (copy from `samples/ignored_fields.yaml`, customize this!)
+- `msg_specs.py` - Message specifications (pre-configured, included in project)
+- `samples/` - Sample files and configuration template
+  - `ignored_fields.yaml` - Default configuration template
   - `IPH.txt`, `WLPFO.txt` - Sample message files
 - `README.md` - Full documentation
 - `CONFIG_GUIDE.md` - Configuration reference
@@ -180,7 +161,7 @@ python compare_amex_cli.py msg1.txt msg2.txt --verbose -o detailed_report.txt
 
 ### See all Field 55 differences
 
-Temporarily edit `config.yaml` and remove or comment out the Field 55 ignored subfields:
+Temporarily edit `ignored_fields.yaml` and remove or comment out the Field 55 ignored subfields:
 
 ```yaml
 ignored_subfields:
@@ -198,6 +179,6 @@ ignored_fields:
 ### Compare only specific message type
 
 ```bash
-./compare_amex_cli.sh file1.txt file2.txt --request-only   # Only Request
-./compare_amex_cli.sh file1.txt file2.txt --response-only  # Only Response
+uv run compare_amex_cli.py file1.txt file2.txt --request-only -c ignored_fields.yaml   # Only Request
+uv run compare_amex_cli.py file1.txt file2.txt --response-only -c ignored_fields.yaml  # Only Response
 ```
