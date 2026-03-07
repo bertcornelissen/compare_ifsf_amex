@@ -16,10 +16,10 @@ REM Environment hardening
 SET PYTHONDONTWRITEBYTECODE=1
 SET PYTHONUTF8=1
 
-REM ---- Ensure config file exist ----
-IF NOT EXIST "%APP_DIR%\config.yaml" (
-    echo Copying default_config.yaml to config.yaml...
-    copy "%APP_DIR%\samples\default_config.yaml" "%APP_DIR%\config.yaml"
+REM ---- Ensure ignored_fields file exist ----
+IF NOT EXIST "%APP_DIR%\ignored_fields.yaml" (
+    echo Copying samples\ignored_fields.yaml to ignored_fields.yaml...
+    copy "%APP_DIR%\samples\ignored_fields.yaml" "%APP_DIR%\ignored_fields.yaml"
 )
 
 REM ---- Check Python ----
@@ -58,7 +58,7 @@ IF /I "%1"=="gui" (
 IF /I "%1"=="cli" IF NOT "%2"=="" IF NOT "%3"=="" (
     echo Running Compare ISO8583 Amex CLI with command-line parameters...
     cd /d "%APP_DIR%"
-    python "%APP_DIR%\compare_amex_cli.py" "%2" "%3%" -c "%APP_DIR%\config.yaml"
+    python "%APP_DIR%\compare_amex_cli.py" "%2" "%3%" -c "%APP_DIR%\ignored_fields.yaml"
     pause
     exit /b
 )
@@ -83,7 +83,7 @@ if "%MODE%"=="2" (
     set /p PARAM2=Enter second parameter:
     echo Running Compare ISO8583 Amex CLI...
     cd /d "%APP_DIR%"
-    python "%APP_DIR%\compare_amex_cli.py" "%PARAM1%" "%PARAM2%" -c "%APP_DIR%\config.yaml"
+    python "%APP_DIR%\compare_amex_cli.py" "%PARAM1%" "%PARAM2%" -c "%APP_DIR%\ignored_fields.yaml"
     pause
     exit /b
 )

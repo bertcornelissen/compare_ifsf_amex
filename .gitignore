@@ -9,6 +9,7 @@ wheels/
 # Virtual environments
 .venv
 
-# User-customizable config files (defaults are in samples/)
-config.yaml
-msg_specs.py
+
+# run time config
+/ignored_fields.yaml
+
