@@ -3,6 +3,7 @@ from difflib import HtmlDiff
 import pandas as pd
 import iso8583
 
+import compare_amex_cli
 from compare_amex_cli import (
     load_config,
     split_messages,
@@ -35,18 +36,23 @@ if 'file2_content' not in st.session_state:
 
 def display_config_info():
     """Display current configuration in sidebar."""
+    # Always read from the module so we see the values loaded by load_config,
+    # not the stale local bindings captured at import time.
+    ignored_fields = compare_amex_cli.IGNORED_FIELD_VALUES
+    ignored_subfields = compare_amex_cli.IGNORED_SUBFIELDS
+
     with st.sidebar:
         st.header("⚙️ Configuration")
         
         with st.expander("Ignored Fields", expanded=False):
-            if IGNORED_FIELD_VALUES:
-                st.write(", ".join(sorted(IGNORED_FIELD_VALUES)))
+            if ignored_fields:
+                st.write(", ".join(sorted(ignored_fields)))
             else:
                 st.write("None")
         
         with st.expander("Ignored Subfields", expanded=False):
-            if IGNORED_SUBFIELDS:
-                for field_num, subfields in sorted(IGNORED_SUBFIELDS.items()):
+            if ignored_subfields:
+                for field_num, subfields in sorted(ignored_subfields.items()):
                     st.write(f"**Field {field_num}:**")
                     for subfield in sorted(subfields):
                         st.write(f"  - {subfield}")
@@ -484,7 +490,7 @@ def render_report(diff, verdict, message_type):
     return "\n".join(report)
 
 def main():
-    st.title("🔍 ISO 8583 Message Comparator")
+    st.title("🔍 AMEX ISO 8583 Message Comparator")
     st.markdown("Compare two ISO 8583 message files and analyze their differences")
     
     # Load configuration
