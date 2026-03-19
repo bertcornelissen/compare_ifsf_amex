@@ -622,17 +622,11 @@ def main():
                 </style>
             """, unsafe_allow_html=True)
             
-            # Let user choose what to compare
-            diff_target = st.selectbox(
-                "Select what to compare:",
-                ["Request Message", "Response Message"]
-            )
-            
             # Option to show only differences
             show_only_differences = st.checkbox("Show only differences", value=False)
-            
-            if diff_target == "Request Message" and 'request' in st.session_state.results:
-                st.markdown("### Request Message Comparison")
+
+            if 'request' in st.session_state.results:
+                st.markdown("### 📤 Request Message Comparison")
                 styled_df = create_pandas_comparison(
                     st.session_state.results['request']['raw_a'],
                     st.session_state.results['request']['raw_b'],
@@ -642,8 +636,10 @@ def main():
                     st.markdown(styled_df.to_html(), unsafe_allow_html=True)
                 else:
                     st.error("Failed to create a styled DataFrame for the Request Message comparison.")
-            elif diff_target == "Response Message" and 'response' in st.session_state.results:
-                st.markdown("### Response Message Comparison")
+
+            if 'response' in st.session_state.results:
+                st.divider()
+                st.markdown("### 📥 Response Message Comparison")
                 styled_df = create_pandas_comparison(
                     st.session_state.results['response']['raw_a'],
                     st.session_state.results['response']['raw_b'],
@@ -653,8 +649,6 @@ def main():
                     st.markdown(styled_df.to_html(), unsafe_allow_html=True)
                 else:
                     st.error("Failed to create a styled DataFrame for the Response Message comparison.")
-            else:
-                st.info(f"{diff_target} comparison not available")
         
         elif view_mode == "Comparison Report":
             # File names
@@ -723,40 +717,25 @@ def main():
         
         else:  # Side-by-Side Diff
             st.subheader("📊 Side-by-Side Comparison")
-            
-            # Let user choose what to compare
-            diff_target = st.selectbox(
-                "Select what to compare:",
-                ["Full File", "Request Message Only", "Response Message Only"]
-            )
-            
-            if diff_target == "Full File":
+
+            if 'request' in st.session_state.results:
+                st.markdown("### 📤 Request Message")
                 display_side_by_side_diff(
-                    st.session_state.file1_content,
-                    st.session_state.file2_content,
-                    st.session_state.file1_name,
-                    st.session_state.file2_name
+                    st.session_state.results['request']['raw_a'],
+                    st.session_state.results['request']['raw_b'],
+                    f"{st.session_state.file1_name} (Request)",
+                    f"{st.session_state.file2_name} (Request)"
                 )
-            elif diff_target == "Request Message Only":
-                if 'request' in st.session_state.results:
-                    display_side_by_side_diff(
-                        st.session_state.results['request']['raw_a'],
-                        st.session_state.results['request']['raw_b'],
-                        f"{st.session_state.file1_name} (Request)",
-                        f"{st.session_state.file2_name} (Request)"
-                    )
-                else:
-                    st.info("Request comparison not available")
-            elif diff_target == "Response Message Only":
-                if 'response' in st.session_state.results:
-                    display_side_by_side_diff(
-                        st.session_state.results['response']['raw_a'],
-                        st.session_state.results['response']['raw_b'],
-                        f"{st.session_state.file1_name} (Response)",
-                        f"{st.session_state.file2_name} (Response)"
-                    )
-                else:
-                    st.info("Response comparison not available")
+
+            if 'response' in st.session_state.results:
+                st.divider()
+                st.markdown("### 📥 Response Message")
+                display_side_by_side_diff(
+                    st.session_state.results['response']['raw_a'],
+                    st.session_state.results['response']['raw_b'],
+                    f"{st.session_state.file1_name} (Response)",
+                    f"{st.session_state.file2_name} (Response)"
+                )
 
 if __name__ == "__main__":
     main()
