@@ -11,6 +11,20 @@ field_12_spec = {
 "04":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 6, "desc": "Time"},
 }
 
+field_22_spec = {
+"01":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Card Data Input Capability"},
+"02":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Cardholder Authentication Capability"},
+"03":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Card Capture Capability"},
+"04":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Operating Environment"},
+"05":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Cardholder Present"},
+"06":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Card Present"},
+"07":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Card Data Input Mode"},
+"08":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Cardmember Authentication Method"},
+"09":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Cardmember Authentication Entity"},
+"10":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Card Data Output Capability"},
+"11":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "Terminal Output Capability"},
+"12":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 1, "desc": "PIN Capture Capability"},
+}
 
 field_55_spec = {
 "00":  {"data_enc": "ascii", "len_enc": "ascii", "len_type": 0, "max_len": 12, "desc": "ICC Header"},
@@ -45,7 +59,7 @@ spec = {
 "14":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 4,   "desc": "Date, Expiration"},
 "15":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 6,   "desc": "Date, Settlement"},
 "19":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 3,   "desc": "Acquiring Institution Country Code"},
-"22":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 12,  "desc": "Point Of Service Data Code"},
+"22":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 12,  "desc": "Point Of Service Data Code", "sub_field_specs": field_22_spec},
 "24":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 3,   "desc": "Function Code"},
 "25":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 4,   "desc": "Message Reason Code"},
 "26":     {"data_enc": "cp500", "len_enc": "cp500", "len_type": 0, "max_len": 4,   "desc": "Card Acceptor Business Code"},
