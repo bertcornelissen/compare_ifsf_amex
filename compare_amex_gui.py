@@ -717,25 +717,12 @@ def main():
         
         else:  # Side-by-Side Diff
             st.subheader("📊 Side-by-Side Comparison")
-
-            if 'request' in st.session_state.results:
-                st.markdown("### 📤 Request Message")
-                display_side_by_side_diff(
-                    st.session_state.results['request']['raw_a'],
-                    st.session_state.results['request']['raw_b'],
-                    f"{st.session_state.file1_name} (Request)",
-                    f"{st.session_state.file2_name} (Request)"
-                )
-
-            if 'response' in st.session_state.results:
-                st.divider()
-                st.markdown("### 📥 Response Message")
-                display_side_by_side_diff(
-                    st.session_state.results['response']['raw_a'],
-                    st.session_state.results['response']['raw_b'],
-                    f"{st.session_state.file1_name} (Response)",
-                    f"{st.session_state.file2_name} (Response)"
-                )
+            display_side_by_side_diff(
+                st.session_state.file1_content,
+                st.session_state.file2_content,
+                st.session_state.file1_name,
+                st.session_state.file2_name
+            )
 
 if __name__ == "__main__":
     main()
